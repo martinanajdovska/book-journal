@@ -7,6 +7,9 @@
 </head>
 <body>
 <div class="container">
+    <div class="col-12 justify-content-center my-5" th:if="${hasError}">
+        <p th:text="${error}"></p>
+    </div>
     <div class="row">
         <div class="col-md-5">
             <form th:action="(${book} != null ? '/books/edit/'+ ${book.getId()} : '/books/add')" method="POST" enctype="multipart/form-data">

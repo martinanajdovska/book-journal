@@ -8,18 +8,25 @@
 <body>
 <div class="container">
     <div class="row">
+        <a type="button" style="width: 150px;" class="btn btn-primary mt-5" href="/">Back</a>
+    </div>
+    <div class="row my-5 border p-4">
         <div class="col-6">
             <img style="max-height: 20rem;" th:src="@{'/uploads/'+${book.getFile()}}" alt="Image for book">
         </div>
         <div class="col-6">
             <h3 th:text="${book.getTitle()}"></h3>
             <h2 th:text="${book.getAuthor()}"></h2>
-            <p th:text="${book.getPages()}"></p>
+            <p th:text="'Pages: ' + ${book.getPages()}"></p>
+            <a class="btn btn-sm btn-info" th:text="${!toReadBook}?'To read':'Remove from to-read'" th:href="@{'/books/to-read/{id}?redirect=/books/details/{id}' (id=${book.getId()})}"></a>
+            <a class="btn btn-sm btn-info" th:if="${!hasRead}" th:href="${'/books/read/'+book.getId()}">Mark as read</a>
+            <a class="btn btn-sm btn-info" th:if="${hasRead}" th:href="${'/books/remove-read/'+book.getId()}">Remove from read</a>
             <th:block th:if="${hasRead && userReadBook != null}">
                     <form method="post" th:action="'/books/read/'+${book.getId()}">
                         <div class="form-group">
                             <label for="startedDate">Started date:</label>
                             <input type="date"
+                                   style="width:150px;"
                                    class="form-control"
                                    id="startedDate"
                                    name="startedDate"
@@ -27,6 +34,7 @@
                                    placeholder="startedDate">
                             <label for="finishedDate">Finished date:</label>
                             <input type="date"
+                                   style="width:150px;"
                                    class="form-control"
                                    id="finishedDate"
                                    name="finishedDate"
@@ -36,22 +44,25 @@
                         <input type="submit" class="btn btn-primary" value="Add dates">
                     </form>
             </th:block>
+            <p class="mt-3 mb-0">Summary:</p>
             <p th:text="${book.getDescription()}"></p>
         </div>
-        <a th:if="${!hasRead}" th:href="${'/books/read/'+book.getId()}">Assign as read</a>
-        <a th:if="${hasRead}" th:href="${'/books/remove-read/'+book.getId()}">Remove from read</a>
     </div>
     <div class="row">
         <th:block th:if="${hasRead}">
             <form method="post" th:action="'/books/review/'+${book.getId()}">
                 <label for="review">Add review:</label>
-                <textarea class="form-control" name="review" id="review" cols="30" rows="10">Enter review</textarea>
+                <textarea class="form-control" name="review" id="review" cols="50" rows="3" placeholder="Enter review"></textarea>
                 <input type="submit" class="btn btn-primary" value="Submit">
             </form>
         </th:block>
+    </div>
+    <h3 class="mt-5">Reviews:</h3>
+    <div class="row mb-5">
         <th:block th:if="${reviews.size() > 0}">
-            <div th:each="review : ${reviews}" class="col-6">
-                <p th:text="${review.getUser().getUsername()}"></p>
+            <div th:each="review : ${reviews}" class="col-3 border p-2 mx-2">
+                <p class="mb-0" th:text="'User: ' + ${review.getUser().getUsername()}"></p>
+                <hr>
                 <p th:text="${review.getReview()}"></p>
             </div>
         </th:block>

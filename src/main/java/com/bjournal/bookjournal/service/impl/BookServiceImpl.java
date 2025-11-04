@@ -46,18 +46,14 @@ public class BookServiceImpl implements BookService {
     }
 
     @Override
-    public void add(String title, String author, String description, MultipartFile file, Integer pages) {
-        if (title==null || author==null || description==null
-                || file==null || title.isBlank() || author.isBlank()
-                || description.isBlank() || file.isEmpty() || pages==null || pages==0) {
-            throw new IllegalArgumentException();
+    public void add(String title, String author, String description, MultipartFile file, Integer pages) throws IOException {
+        if (title == null || author == null || description == null
+                || file == null || title.isBlank() || author.isBlank()
+                || description.isBlank() || file.isEmpty() || pages == null || pages == 0) {
+            throw new IllegalArgumentException("Invalid input");
         }
-        try {
-            String filePath = saveImage(file, title, author);
-            bookRepository.save(new Book(title, author, description, filePath, pages));
-        } catch (IOException e) {
-            // error
-        }
+        String filePath = saveImage(file, title, author);
+        bookRepository.save(new Book(title, author, description, filePath, pages));
     }
 
     private String saveImage(MultipartFile file, String title, String author) throws IOException {
@@ -66,7 +62,7 @@ public class BookServiceImpl implements BookService {
             Files.createDirectories(uploadPath);
         }
         String originalFilename = file.getOriginalFilename();
-        String fileName =  String.format("%s-%s.%s",title, author, originalFilename.substring(originalFilename.lastIndexOf(".") + 1));
+        String fileName = String.format("%s-%s.%s", title, author, originalFilename.substring(originalFilename.lastIndexOf(".") + 1));
         Path filePath = uploadPath.resolve(fileName);
         Files.copy(file.getInputStream(), filePath, StandardCopyOption.REPLACE_EXISTING);
 
@@ -75,19 +71,15 @@ public class BookServiceImpl implements BookService {
 
     @Override
     public Optional<Book> update(Long id, String title, String author, String description,
-                                 MultipartFile file, Integer pages) {
-        if (title==null || author==null || description==null
-                || file==null || title.isBlank() || author.isBlank()
-                || description.isBlank() || file.isEmpty() || pages==null || pages==0) {
-            throw new IllegalArgumentException();
-        }
+                                 MultipartFile file, Integer pages) throws IOException {
         Book book = findById(id).orElseThrow(() -> new BookNotFoundException(id));
-        String filePath = book.getFile();
-        try {
-            filePath = saveImage(file, title, author);
-        } catch (IOException e) {
-            // error
+
+        if (title == null || author == null || description == null
+                || file == null || title.isBlank() || author.isBlank()
+                || description.isBlank() || file.isEmpty() || pages == null || pages == 0) {
+            throw new IllegalArgumentException("Invalid input");
         }
+        String filePath = saveImage(file, title, author);
 
         book.setTitle(title);
         book.setAuthor(author);

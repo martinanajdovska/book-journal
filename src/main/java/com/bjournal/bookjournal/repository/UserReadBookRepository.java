@@ -14,4 +14,5 @@ public interface UserReadBookRepository extends JpaRepository<UserReadBook, Long
     List<UserReadBook> findByUser(User user);
     Optional<UserReadBook> findByUserAndBook(User user, Book book);
     void deleteByUserAndBook(User user, Book book);
+    List<UserReadBook> findAllByUserAndBookTitleContainingIgnoreCase(User user, String title);
 }

@@ -54,12 +54,21 @@ public class UserReadBookServiceImpl implements UserReadBookService {
 
     @Override
     public void update(UserReadBook userReadBook, LocalDate startedDate, LocalDate finishedDate) {
-        if (startedDate.isAfter(finishedDate)) {
+        if (startedDate !=null && finishedDate!=null && startedDate.isAfter(finishedDate)) {
             throw new IllegalArgumentException("Started date cannot be after finished date");
         }
         userReadBook.setStartedDate(startedDate);
         userReadBook.setFinishedDate(finishedDate);
         this.userReadBookRepository.save(userReadBook);
+    }
+
+    @Override
+    public List<UserReadBook> findAllByUserAndBookTitleContainingIgnoreCase(String username, String title) {
+        if (username == null || username.isBlank() || title == null || title.isBlank()) {
+            throw new IllegalArgumentException();
+        }
+        User user = this.userService.findByUsername(username).orElseThrow(() -> new UsernameNotFoundException("User not found"));
+        return this.userReadBookRepository.findAllByUserAndBookTitleContainingIgnoreCase(user, title);
     }
 
 }

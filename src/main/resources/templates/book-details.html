@@ -60,7 +60,7 @@
     <h3 class="mt-5">Reviews:</h3>
     <div class="row mb-5">
         <th:block th:if="${reviews.size() > 0}">
-            <div th:each="review : ${reviews}" class="col-3 border p-2 mx-2">
+            <div th:each="review : ${reviews}" class="col-3 border p-2 m-2">
                 <p class="mb-0" th:text="'User: ' + ${review.getUser().getUsername()}"></p>
                 <hr>
                 <p th:text="${review.getReview()}"></p>

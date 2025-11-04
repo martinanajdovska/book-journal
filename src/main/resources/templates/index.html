@@ -9,7 +9,7 @@
 <body>
 <div class="container mb-4">
     <div class="row">
-        <div class="col-12 justify-content-center my-5" th:if="${hasError}">
+        <div class="col-12 justify-content-center my-5 alert alert-danger" role="alert" th:if="${hasError}">
             <p th:text="${error}"></p>
         </div>
         <div class="col-12 justify-content-center my-5">

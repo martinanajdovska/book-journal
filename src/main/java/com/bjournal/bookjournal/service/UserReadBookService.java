@@ -1,7 +1,6 @@
 package com.bjournal.bookjournal.service;
 
 import com.bjournal.bookjournal.model.Book;
-import com.bjournal.bookjournal.model.User;
 import com.bjournal.bookjournal.model.UserReadBook;
 
 import java.time.LocalDate;
@@ -14,6 +13,6 @@ public interface UserReadBookService {
     Optional<UserReadBook> findByUserAndBook(String username, Book book);
     void add(LocalDate addedDate, String username, Book book);
     void deleteByUserAndBook(String username, Book book);
-    void update(UserReadBook userReadBook, LocalDate startedDate, LocalDate finishedDate);
+    void updateDates(UserReadBook userReadBook, LocalDate startedDate, LocalDate finishedDate);
     List<UserReadBook> findAllByUserAndBookTitleContainingIgnoreCase(String username, String title);
 }

@@ -53,7 +53,7 @@ public class UserReadBookServiceImpl implements UserReadBookService {
     }
 
     @Override
-    public void update(UserReadBook userReadBook, LocalDate startedDate, LocalDate finishedDate) {
+    public void updateDates(UserReadBook userReadBook, LocalDate startedDate, LocalDate finishedDate) {
         if (startedDate !=null && finishedDate!=null && startedDate.isAfter(finishedDate)) {
             throw new IllegalArgumentException("Started date cannot be after finished date");
         }
@@ -65,7 +65,7 @@ public class UserReadBookServiceImpl implements UserReadBookService {
     @Override
     public List<UserReadBook> findAllByUserAndBookTitleContainingIgnoreCase(String username, String title) {
         if (username == null || username.isBlank() || title == null || title.isBlank()) {
-            throw new IllegalArgumentException();
+            throw new IllegalArgumentException("invalid username or title");
         }
         User user = this.userService.findByUsername(username).orElseThrow(() -> new UsernameNotFoundException("User not found"));
         return this.userReadBookRepository.findAllByUserAndBookTitleContainingIgnoreCase(user, title);

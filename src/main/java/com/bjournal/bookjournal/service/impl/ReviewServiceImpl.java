@@ -5,7 +5,7 @@ import com.bjournal.bookjournal.model.UserReadBook;
 import com.bjournal.bookjournal.model.Review;
 import com.bjournal.bookjournal.model.User;
 import com.bjournal.bookjournal.model.exceptions.BookNotFoundException;
-import com.bjournal.bookjournal.model.exceptions.ReadBookNotFoundException;
+import com.bjournal.bookjournal.model.exceptions.UserReadBookNotFoundException;
 import com.bjournal.bookjournal.repository.ReviewRepository;
 import com.bjournal.bookjournal.service.BookService;
 import com.bjournal.bookjournal.service.UserReadBookService;
@@ -45,7 +45,7 @@ public class ReviewServiceImpl implements ReviewService {
         User user = this.userService.findByUsername(username).orElseThrow(()-> new UsernameNotFoundException(username));
         Book book = this.bookService.findById(bookId).orElseThrow(()-> new BookNotFoundException(bookId));
         // if user hasn't read this book then they can't add a review
-        UserReadBook userReadBook = this.userReadBookService.findByUserAndBook(username,book).orElseThrow(()-> new ReadBookNotFoundException(user,book));
+        UserReadBook userReadBook = this.userReadBookService.findByUserAndBook(username,book).orElseThrow(()-> new UserReadBookNotFoundException(user,book));
 
         if (text==null || text.isBlank()){
             throw new IllegalArgumentException("review is empty");

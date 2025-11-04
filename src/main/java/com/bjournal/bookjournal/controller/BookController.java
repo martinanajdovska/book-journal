@@ -4,12 +4,13 @@ import com.bjournal.bookjournal.model.Book;
 import com.bjournal.bookjournal.model.Review;
 import com.bjournal.bookjournal.model.UserReadBook;
 import com.bjournal.bookjournal.model.exceptions.BookNotFoundException;
-import com.bjournal.bookjournal.model.exceptions.UserNotAuthenticatedException;
 import com.bjournal.bookjournal.service.BookService;
 import com.bjournal.bookjournal.service.ReviewService;
 import com.bjournal.bookjournal.service.ToReadBookService;
 import com.bjournal.bookjournal.service.UserReadBookService;
-import jakarta.servlet.http.HttpServletRequest;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
@@ -17,8 +18,8 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 import java.time.LocalDate;
-import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 @Controller
 @RequestMapping("/books")
@@ -36,7 +37,7 @@ public class BookController {
     }
 
     @GetMapping("/add")
-    public String addBook() {
+    public String getAddBookPage() {
         return "book-form";
     }
 
@@ -45,7 +46,7 @@ public class BookController {
                           @RequestParam(required = true) String description, @RequestParam(required = true) MultipartFile file,
                           @RequestParam(required = true) Integer pages, Model model) {
         String contentType = file.getContentType();
-        if (!contentType.equals("image/jpeg") && !contentType.equals("image/png")) {
+        if (contentType==null || !contentType.equals("image/jpeg") && !contentType.equals("image/png")) {
             model.addAttribute("error", "Only JPEG or PNG images are allowed");
             model.addAttribute("hasError", true);
             return "book-form";
@@ -65,12 +66,14 @@ public class BookController {
     }
 
     @GetMapping("/edit/{id}")
-    public String editBook(@PathVariable Long id, Model model) {
-        if (this.bookService.findById(id).isPresent()) {
-            model.addAttribute("book", bookService.findById(id).get());
+    public String getEditBookPage(@PathVariable Long id, Model model) {
+        Optional<Book> book = bookService.findById(id);
+        if (book.isPresent()) {
+            model.addAttribute("book", book.get());
             return "book-form";
         }
-        return "redirect:/?error=BookNotFound";
+        model.addAttribute("error", "Book not found");
+        return "error-page";
     }
 
     @PostMapping("/edit/{id}")
@@ -78,12 +81,19 @@ public class BookController {
                            @RequestParam(required = true) String author, @RequestParam(required = true) String description,
                            @RequestParam(required = true) MultipartFile file, @RequestParam(required = true) Integer pages,
                            Model model) {
+        String contentType = file.getContentType();
+        if (contentType==null || !contentType.equals("image/jpeg") && !contentType.equals("image/png")) {
+            model.addAttribute("error", "Only JPEG or PNG images are allowed");
+            model.addAttribute("hasError", true);
+            return "book-form";
+        }
         try {
             this.bookService.update(id, title, author, description, file, pages);
         } catch (BookNotFoundException e) {
             model.addAttribute("error", e.getMessage());
-            return "redirect:/?error=BookNotFound";
+            return "error-page";
         } catch (IllegalArgumentException e) {
+            // no need to check if it exists because it didn't throw an exception
             Book book = bookService.findById(id).get();
             model.addAttribute("book", book);
             model.addAttribute("error", e.getMessage());
@@ -106,23 +116,30 @@ public class BookController {
     }
 
     @GetMapping("/details/{id}")
-    public String detailsBook(@PathVariable Long id, Model model, HttpServletRequest req) {
-        String username = req.getRemoteUser();
-        if (username == null) {
-            throw new UserNotAuthenticatedException();
-        }
-        if (this.bookService.findById(id).isPresent()) {
-            Book book = this.bookService.findById(id).get();
+    public String detailsBook(@PathVariable Long id, Model model, @AuthenticationPrincipal UserDetails user) {
+        String username = user.getUsername();
+        Optional<Book> bookOptional = bookService.findById(id);
+        if (bookOptional.isPresent()) {
+            Book book = bookOptional.get();
             List<Review> reviews = this.reviewService.findAllByBook(book);
-            if (toReadBookService.findByUserAndBook(username, book).isPresent()) {
-                model.addAttribute("toReadBook", true);
-            } else {
-                model.addAttribute("toReadBook", false);
+            Optional<UserReadBook> userReadBookOptional;
+            try {
+                if (toReadBookService.findByUserAndBook(username, book).isPresent()) {
+                    model.addAttribute("toReadBook", true);
+                } else {
+                    model.addAttribute("toReadBook", false);
+                }
+
+                userReadBookOptional = userReadBookService.findByUserAndBook(username, book);
+            } catch (UsernameNotFoundException e) {
+                model.addAttribute("error", e.getMessage());
+                return "error-page";
             }
             model.addAttribute("book", book);
             model.addAttribute("reviews", reviews);
-            if (userReadBookService.findByUserAndBook(username, book).isPresent()) {
-                UserReadBook hasReadBook = userReadBookService.findByUserAndBook(username, book).get();
+
+            if (userReadBookOptional.isPresent()) {
+                UserReadBook hasReadBook = userReadBookOptional.get();
                 model.addAttribute("hasRead", true);
                 model.addAttribute("userReadBook", hasReadBook);
             } else {
@@ -131,85 +148,122 @@ public class BookController {
             }
             return "book-details";
         }
-        return "redirect:/?error=BookNotFound";
+        model.addAttribute("error", "Book not found");
+        return "error-page";
     }
 
     @GetMapping("/read/{id}")
-    public String readBook(@PathVariable Long id, HttpServletRequest req) {
-        if (this.bookService.findById(id).isPresent()) {
-            Book book = this.bookService.findById(id).get();
-            String username = req.getRemoteUser();
-            if (username == null) {
-                throw new UserNotAuthenticatedException();
-            }
+    public String readBook(@PathVariable Long id, Model model, @AuthenticationPrincipal UserDetails user) {
+        Optional<Book> bookOptional = bookService.findById(id);
+        if (bookOptional.isPresent()) {
+            Book book = bookOptional.get();
+            String username = user.getUsername();
 
-            this.userReadBookService.add(LocalDate.now(), username, book);
+            try {
+                this.userReadBookService.add(LocalDate.now(), username, book);
+            } catch (IllegalArgumentException | UsernameNotFoundException e) {
+                model.addAttribute("error", e.getMessage());
+                return "error-page";
+            }
             return "redirect:/books/details/" + id;
         }
-        return "redirect:/?error=BookNotFound";
+        model.addAttribute("error", "Book not found");
+        return "error-page";
     }
 
     @PostMapping("/read/{id}")
-    public String readBook(@PathVariable Long id, @RequestParam(required = false) LocalDate startedDate,
-                           @RequestParam(required = false) LocalDate finishedDate, HttpServletRequest req) {
-        if (this.bookService.findById(id).isPresent()) {
-            Book book = this.bookService.findById(id).get();
-            String username = req.getRemoteUser();
-            if (username == null) {
-                throw new UserNotAuthenticatedException();
-            }
+    public String readBookAddDates(@PathVariable Long id, @RequestParam(required = false) LocalDate startedDate,
+                                   @RequestParam(required = false) LocalDate finishedDate, Model model,
+                                   @AuthenticationPrincipal UserDetails user) {
+        Optional<Book> bookOptional = bookService.findById(id);
+        if (bookOptional.isPresent()) {
+            Book book = bookOptional.get();
+            String username = user.getUsername();
 
-            if (userReadBookService.findByUserAndBook(username, book).isPresent()) {
-                UserReadBook hasReadBook = userReadBookService.findByUserAndBook(username, book).get();
-                this.userReadBookService.update(hasReadBook, startedDate, finishedDate);
+            Optional<UserReadBook> userReadBookOptional;
+            try {
+                userReadBookOptional = userReadBookService.findByUserAndBook(username, book);
+
+            } catch (UsernameNotFoundException e) {
+                model.addAttribute("error", e.getMessage());
+                return "error-page";
+            }
+            if (userReadBookOptional.isPresent()) {
+                UserReadBook hasReadBook = userReadBookOptional.get();
+                try {
+                    this.userReadBookService.updateDates(hasReadBook, startedDate, finishedDate);
+                } catch (IllegalArgumentException e) {
+                    model.addAttribute("error", e.getMessage());
+                    return "error-page";
+                }
                 return "redirect:/books/details/" + id;
             } else {
-                return "redirect:/?error=BookNotFound";
+                model.addAttribute("error", "User has not read this book");
+                return "error-page";
             }
         }
-        return "redirect:/?error=BookNotFound";
+        model.addAttribute("error", "Book not found");
+        return "error-page";
     }
 
     @GetMapping("/remove-read/{id}")
-    public String removeReadBook(@PathVariable Long id, HttpServletRequest req) {
-        if (this.bookService.findById(id).isPresent()) {
-            Book book = this.bookService.findById(id).get();
-            String username = req.getRemoteUser();
-            if (username == null) {
-                throw new UserNotAuthenticatedException();
+    public String removeReadBook(@PathVariable Long id, Model model, @AuthenticationPrincipal UserDetails user) {
+        Optional<Book> bookOptional = bookService.findById(id);
+        if (bookOptional.isPresent()) {
+            Book book = bookOptional.get();
+            String username = user.getUsername();
+
+            try {
+                this.userReadBookService.deleteByUserAndBook(username, book);
+            } catch (UsernameNotFoundException e) {
+                model.addAttribute("error", e.getMessage());
+                return "error-page";
             }
 
-            this.userReadBookService.deleteByUserAndBook(username, book);
             return "redirect:/books/details/" + id;
         }
-        return "redirect:/?error=BookNotFound";
+        model.addAttribute("error", "Book not found");
+        return "error-page";
     }
 
     @PostMapping("/review/{id}")
-    public String reviewBook(@PathVariable Long id, @RequestParam(required = true) String review, HttpServletRequest req) {
+    public String reviewBook(@PathVariable Long id, @RequestParam(required = true) String review,
+                             Model model, @AuthenticationPrincipal UserDetails user) {
         if (this.bookService.findById(id).isPresent()) {
-            String username = req.getRemoteUser();
-            if (username == null) {
-                throw new UserNotAuthenticatedException();
+            String username = user.getUsername();
+
+            try {
+                this.reviewService.addReview(review, username, id);
+            } catch (UsernameNotFoundException | BookNotFoundException | IllegalArgumentException e) {
+                model.addAttribute("error", e.getMessage());
+                return "error-page";
             }
 
-            this.reviewService.addReview(review, username, id);
             return "redirect:/books/details/" + id;
         }
-        return "redirect:/?error=BookNotFound";
+        model.addAttribute("error", "Book not found");
+        return "error-page";
     }
 
     @GetMapping("/read")
-    public String listReadBooks(HttpServletRequest req, Model model, @RequestParam(required = false) String search) {
-        String username = req.getRemoteUser();
-        if (username == null) {
-            throw new UserNotAuthenticatedException();
-        }
-        List<UserReadBook> readBooks = new ArrayList<>();
+    public String listReadBooks(Model model, @RequestParam(required = false) String search,
+                                @AuthenticationPrincipal UserDetails user) {
+        String username = user.getUsername();
+        List<UserReadBook> readBooks;
         if (search == null || search.isBlank()) {
-            readBooks = this.userReadBookService.findAllByUser(username);
+            try {
+                readBooks = this.userReadBookService.findAllByUser(username);
+            } catch (UsernameNotFoundException e) {
+                model.addAttribute("error", e.getMessage());
+                return "error-page";
+            }
         } else {
-            readBooks = this.userReadBookService.findAllByUserAndBookTitleContainingIgnoreCase(username, search);
+            try {
+                readBooks = this.userReadBookService.findAllByUserAndBookTitleContainingIgnoreCase(username, search);
+            } catch (UsernameNotFoundException | IllegalArgumentException e) {
+                model.addAttribute("error", e.getMessage());
+                return "error-page";
+            }
         }
         model.addAttribute("readBooks", readBooks);
         model.addAttribute("search", search);
@@ -217,17 +271,23 @@ public class BookController {
     }
 
     @GetMapping("/to-read/{id}")
-    public String toReadBook(@PathVariable Long id, @RequestParam(required = true) String redirect, HttpServletRequest req) {
-        if (this.bookService.findById(id).isPresent()) {
-            Book book = this.bookService.findById(id).get();
-            String username = req.getRemoteUser();
-            if (username == null) {
-                throw new UserNotAuthenticatedException();
+    public String toggleToReadBook(@PathVariable Long id, @RequestParam(required = true) String redirect,
+                                   Model model, @AuthenticationPrincipal UserDetails user) {
+        Optional<Book> bookOptional = bookService.findById(id);
+        if (bookOptional.isPresent()) {
+            Book book = bookOptional.get();
+            String username = user.getUsername();
+
+            try {
+                this.toReadBookService.toggleToRead(username, book);
+            } catch (UsernameNotFoundException e) {
+                model.addAttribute("error", e.getMessage());
+                return "error-page";
             }
 
-            this.toReadBookService.toggleToRead(username,book);
-            return "redirect:"+redirect;
+            return "redirect:" + redirect;
         }
-        return "redirect:/?error=BookNotFound";
+        model.addAttribute("error", "Book not found");
+        return "error-page";
     }
 }

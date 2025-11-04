@@ -7,7 +7,7 @@
 </head>
 <body>
 <div class="container">
-    <div class="col-12 justify-content-center my-5" th:if="${hasError}">
+    <div class="col-12 justify-content-center my-5 alert alert-danger" role="alert" th:if="${hasError}">
         <p th:text="${error}"></p>
     </div>
     <div class="row">
@@ -30,6 +30,7 @@
                            id="author"
                            name="author"
                            th:value="(${book} != null ? ${book.getAuthor()} : '')"
+                           required
                            placeholder="Author">
                 </div>
                 <div class="form-group">
@@ -39,6 +40,7 @@
                            id="description"
                            name="description"
                            th:value="(${book} != null ? ${book.getDescription()} : '')"
+                           required
                            placeholder="Description">
                 </div>
                 <div class="form-group">
@@ -48,14 +50,16 @@
                            class="form-control"
                            id="pages"
                            name="pages"
-                           th:value="(${book} != null ? ${book.getPages()} : '')">
+                           th:value="(${book} != null ? ${book.getPages()} : '')"
+                           required>
                 </div>
                 <div class="form-group">
                     <th:block th:if="${book} != null">
                         <img style="max-height: 20rem;" th:src="@{'/uploads/'+${book.getFile()}}">
                     </th:block>
                     <input type="file" name="file" accept="image/*"
-                    th:value="(${book} != null ? '/uploads/'+${book.getFile()} : null)">
+                    th:value="(${book} != null ? '/uploads/'+${book.getFile()} : null)"
+                           required>
                 </div>
                 <button id="submit" type="submit" class="btn btn-primary">Submit</button>
                 <a type="button" class="btn btn-primary" href="/">Back</a>

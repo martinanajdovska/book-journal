@@ -47,4 +47,13 @@ public class ToReadBookServiceImpl implements ToReadBookService {
         User user  = this.userRepository.findByUsername(username).orElseThrow(() -> new UsernameNotFoundException(username));
         return this.toReadBookRepository.findByUserAndBook(user, book);
     }
+
+    @Override
+    public List<ToReadBook> findAllByUserAndBookTitleContainingIgnoreCase(String username, String title) {
+        if (title == null || title.isBlank()) {
+            throw new IllegalArgumentException("invalid title");
+        }
+        User user  = this.userRepository.findByUsername(username).orElseThrow(() -> new UsernameNotFoundException(username));
+        return this.toReadBookRepository.findAllByUserAndBookTitleContainingIgnoreCase(user, title);
+    }
 }

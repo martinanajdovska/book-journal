@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.w3.org/1999/xhtml">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.3.1/dist/css/bootstrap.min.css"
+          integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+</head>
+<body>
+<div class="container mb-4">
+    <div class="row">
+        <div class="col-12 justify-content-center my-5">
+            <form action="/books/to-read" method="get">
+                <input type="text" name="search" th:value="${search}" placeholder="Search" size="50">
+                <button type="submit" class="btn btn-info">Search</button>
+            </form>
+        </div>
+        <div class="row">
+            <div class="col-12 justify-content-center mb-3">
+                <a class="btn btn-info" href="/books/read">View already read books</a>
+                <a class="btn btn-primary" href="/">Back</a>
+            </div>
+        </div>
+        <div class="row" th:if="${toReadBooks.size() > 0}">
+            <div th:each="toReadBook : ${toReadBooks}" class="card col-3 m-3" style="width: 68rem; max-height: 26rem;">
+                <a th:href="@{'/books/details/{id}' (id=${toReadBook.getBook().getId()})}">
+                    <img class="card-img-top py-2" style="width: 16rem; max-height: 15rem;"
+                         th:src="@{'/uploads/'+${toReadBook.getBook().getFile()}}" alt="Card image cap">
+                </a>
+                <div class="card-body">
+                    <a th:href="@{'/books/details/{id}' (id=${toReadBook.getBook().getId()})}"
+                       class="text-reset text-decoration-none">
+                        <h5 class="card-title"
+                            th:text="${toReadBook.getBook().getTitle()}+' - '+${toReadBook.getBook().getAuthor()}"></h5>
+                    </a>
+                    <a th:href="@{'/books/to-read/{id}?redirect=/books/to-read' (id=${toReadBook.getBook().getId()})}" class="btn btn-sm btn-danger">
+                        <i class="fa fa-trash">Remove</i>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+</body>
+</html>

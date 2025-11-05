@@ -2,6 +2,7 @@ package com.bjournal.bookjournal.controller;
 
 import com.bjournal.bookjournal.model.Book;
 import com.bjournal.bookjournal.model.Review;
+import com.bjournal.bookjournal.model.ToReadBook;
 import com.bjournal.bookjournal.model.UserReadBook;
 import com.bjournal.bookjournal.model.exceptions.BookNotFoundException;
 import com.bjournal.bookjournal.service.BookService;
@@ -46,7 +47,7 @@ public class BookController {
                           @RequestParam(required = true) String description, @RequestParam(required = true) MultipartFile file,
                           @RequestParam(required = true) Integer pages, Model model) {
         String contentType = file.getContentType();
-        if (contentType==null || !contentType.equals("image/jpeg") && !contentType.equals("image/png")) {
+        if (contentType == null || !contentType.equals("image/jpeg") && !contentType.equals("image/png")) {
             model.addAttribute("error", "Only JPEG or PNG images are allowed");
             model.addAttribute("hasError", true);
             return "book-form";
@@ -82,7 +83,7 @@ public class BookController {
                            @RequestParam(required = true) MultipartFile file, @RequestParam(required = true) Integer pages,
                            Model model) {
         String contentType = file.getContentType();
-        if (contentType==null || !contentType.equals("image/jpeg") && !contentType.equals("image/png")) {
+        if (contentType == null || !contentType.equals("image/jpeg") && !contentType.equals("image/png")) {
             model.addAttribute("error", "Only JPEG or PNG images are allowed");
             model.addAttribute("hasError", true);
             return "book-form";
@@ -289,5 +290,30 @@ public class BookController {
         }
         model.addAttribute("error", "Book not found");
         return "error-page";
+    }
+
+    @GetMapping("/to-read")
+    public String getToReadBooks(Model model, @RequestParam(required = false) String search,
+                                 @AuthenticationPrincipal UserDetails user) {
+        String username = user.getUsername();
+        List<ToReadBook> toReadBooks;
+        if (search == null || search.isBlank()) {
+            try {
+                toReadBooks = this.toReadBookService.findAllByUser(username);
+            } catch (UsernameNotFoundException e) {
+                model.addAttribute("error", e.getMessage());
+                return "error-page";
+            }
+        } else {
+            try {
+                toReadBooks = this.toReadBookService.findAllByUserAndBookTitleContainingIgnoreCase(username, search);
+            } catch (UsernameNotFoundException | IllegalArgumentException e) {
+                model.addAttribute("error", e.getMessage());
+                return "error-page";
+            }
+        }
+
+        model.addAttribute("toReadBooks", toReadBooks);
+        return "to-read-books";
     }
 }

@@ -15,4 +15,5 @@ public interface ToReadBookRepository extends JpaRepository<ToReadBook, Long> {
     Optional<ToReadBook> findByUserAndBook(User user, Book book);
     void deleteToReadBookByUserAndBook(User user, Book book);
     boolean existsToReadBookByUserAndBook(User user, Book book);
+    List<ToReadBook> findAllByUserAndBookTitleContainingIgnoreCase(User user, String title);
 }

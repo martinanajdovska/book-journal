@@ -64,8 +64,8 @@ public class UserReadBookServiceImpl implements UserReadBookService {
 
     @Override
     public List<UserReadBook> findAllByUserAndBookTitleContainingIgnoreCase(String username, String title) {
-        if (username == null || username.isBlank() || title == null || title.isBlank()) {
-            throw new IllegalArgumentException("invalid username or title");
+        if (title == null || title.isBlank()) {
+            throw new IllegalArgumentException("invalid title");
         }
         User user = this.userService.findByUsername(username).orElseThrow(() -> new UsernameNotFoundException("User not found"));
         return this.userReadBookRepository.findAllByUserAndBookTitleContainingIgnoreCase(user, title);

@@ -2,6 +2,7 @@ package com.bjournal.bookjournal.service;
 
 import com.bjournal.bookjournal.model.Book;
 import com.bjournal.bookjournal.model.ToReadBook;
+import com.bjournal.bookjournal.model.UserReadBook;
 
 import java.util.List;
 import java.util.Optional;
@@ -11,4 +12,5 @@ public interface ToReadBookService {
     void toggleToRead(String username, Book book);
     List<ToReadBook> findAllByUser(String username);
     Optional<ToReadBook> findByUserAndBook(String username, Book book);
+    List<ToReadBook> findAllByUserAndBookTitleContainingIgnoreCase(String username, String title);
 }

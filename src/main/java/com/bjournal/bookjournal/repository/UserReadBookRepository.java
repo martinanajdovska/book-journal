@@ -11,8 +11,7 @@ import java.util.Optional;
 
 @Repository
 public interface UserReadBookRepository extends JpaRepository<UserReadBook, Long> {
-    List<UserReadBook> findByUser(User user);
-    Optional<UserReadBook> findByUserAndBook(User user, Book book);
-    void deleteByUserAndBook(User user, Book book);
-    List<UserReadBook> findAllByUserAndBookTitleContainingIgnoreCase(User user, String title);
+    List<UserReadBook> findAllByUserUsername(String username);
+    Optional<UserReadBook> findByUserUsernameAndBookId(String username, Long book);
+    List<UserReadBook> findAllByUserUsernameAndBookTitleContainingIgnoreCase(String username, String title);
 }

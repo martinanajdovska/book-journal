@@ -36,20 +36,20 @@ public class ReviewServiceImpl implements ReviewService {
     }
 
     @Override
-    public List<Review> findAllByBook(Book book) {
-        return this.reviewRepository.findAllByBook(book);
+    public List<Review> findAllByBookId(Long bookId) {
+        return this.reviewRepository.findAllByBookId(bookId);
     }
 
     @Override
     public void addReview(String text, String username, Long bookId) {
+        if (text==null || text.isBlank()){
+            throw new IllegalArgumentException("Review is empty");
+        }
+
         User user = this.userService.findByUsername(username).orElseThrow(()-> new UsernameNotFoundException(username));
         Book book = this.bookService.findById(bookId).orElseThrow(()-> new BookNotFoundException(bookId));
         // if user hasn't read this book then they can't add a review
-        UserReadBook userReadBook = this.userReadBookService.findByUserAndBook(username,book).orElseThrow(()-> new UserReadBookNotFoundException(user,book));
-
-        if (text==null || text.isBlank()){
-            throw new IllegalArgumentException("review is empty");
-        }
+        UserReadBook userReadBook = this.userReadBookService.findByUsernameAndBookId(username,bookId).orElseThrow(()-> new UserReadBookNotFoundException(username,bookId));
 
         Review review = new Review(text, book, user);
         reviewRepository.save(review);

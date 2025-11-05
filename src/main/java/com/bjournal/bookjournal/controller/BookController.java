@@ -5,6 +5,7 @@ import com.bjournal.bookjournal.model.Review;
 import com.bjournal.bookjournal.model.ToReadBook;
 import com.bjournal.bookjournal.model.UserReadBook;
 import com.bjournal.bookjournal.model.exceptions.BookNotFoundException;
+import com.bjournal.bookjournal.model.exceptions.UserReadBookNotFoundException;
 import com.bjournal.bookjournal.service.BookService;
 import com.bjournal.bookjournal.service.ReviewService;
 import com.bjournal.bookjournal.service.ToReadBookService;
@@ -111,139 +112,94 @@ public class BookController {
     }
 
     @GetMapping("/delete/{id}")
-    public String deleteBook(@PathVariable Long id) {
-        this.bookService.deleteById(id);
+    public String deleteBook(@PathVariable Long id, Model model) {
+        try {
+            this.bookService.deleteById(id);
+        } catch (BookNotFoundException e) {
+            model.addAttribute("error", "Book not found");
+            return "error-page";
+        }
         return "redirect:/";
     }
 
     @GetMapping("/details/{id}")
     public String detailsBook(@PathVariable Long id, Model model, @AuthenticationPrincipal UserDetails user) {
         String username = user.getUsername();
-        Optional<Book> bookOptional = bookService.findById(id);
-        if (bookOptional.isPresent()) {
-            Book book = bookOptional.get();
-            List<Review> reviews = this.reviewService.findAllByBook(book);
-            Optional<UserReadBook> userReadBookOptional;
-            try {
-                if (toReadBookService.findByUserAndBook(username, book).isPresent()) {
-                    model.addAttribute("toReadBook", true);
-                } else {
-                    model.addAttribute("toReadBook", false);
-                }
-
-                userReadBookOptional = userReadBookService.findByUserAndBook(username, book);
-            } catch (UsernameNotFoundException e) {
-                model.addAttribute("error", e.getMessage());
-                return "error-page";
-            }
-            model.addAttribute("book", book);
-            model.addAttribute("reviews", reviews);
-
-            if (userReadBookOptional.isPresent()) {
-                UserReadBook hasReadBook = userReadBookOptional.get();
-                model.addAttribute("hasRead", true);
-                model.addAttribute("userReadBook", hasReadBook);
-            } else {
-                model.addAttribute("hasRead", false);
-                model.addAttribute("userReadBook", null);
-            }
-            return "book-details";
+        Optional<Book> book = bookService.findById(id);
+        if (book.isEmpty()) {
+            model.addAttribute("error", "Book not found");
+            return "error-page";
         }
-        model.addAttribute("error", "Book not found");
-        return "error-page";
+
+        List<Review> reviews = this.reviewService.findAllByBookId(id);
+        Optional<UserReadBook> userReadBookOptional = userReadBookService.findByUsernameAndBookId(username, id);
+
+        model.addAttribute("toReadBook", toReadBookService.findByUsernameAndBookId(username, id).isPresent());
+        model.addAttribute("book", book.get());
+        model.addAttribute("reviews", reviews);
+        model.addAttribute("hasRead", userReadBookOptional.isPresent());
+        model.addAttribute("userReadBook", userReadBookOptional.orElse(null));
+        return "book-details";
     }
 
     @GetMapping("/read/{id}")
     public String readBook(@PathVariable Long id, Model model, @AuthenticationPrincipal UserDetails user) {
-        Optional<Book> bookOptional = bookService.findById(id);
-        if (bookOptional.isPresent()) {
-            Book book = bookOptional.get();
-            String username = user.getUsername();
-
-            try {
-                this.userReadBookService.add(LocalDate.now(), username, book);
-            } catch (IllegalArgumentException | UsernameNotFoundException e) {
-                model.addAttribute("error", e.getMessage());
-                return "error-page";
-            }
-            return "redirect:/books/details/" + id;
+        String username = user.getUsername();
+        try {
+            this.userReadBookService.add(LocalDate.now(), username, id);
+        } catch (IllegalArgumentException | UsernameNotFoundException | BookNotFoundException e) {
+            model.addAttribute("error", e.getMessage());
+            return "error-page";
         }
-        model.addAttribute("error", "Book not found");
-        return "error-page";
+        return "redirect:/books/details/" + id;
     }
 
     @PostMapping("/read/{id}")
     public String readBookAddDates(@PathVariable Long id, @RequestParam(required = false) LocalDate startedDate,
                                    @RequestParam(required = false) LocalDate finishedDate, Model model,
                                    @AuthenticationPrincipal UserDetails user) {
-        Optional<Book> bookOptional = bookService.findById(id);
-        if (bookOptional.isPresent()) {
-            Book book = bookOptional.get();
-            String username = user.getUsername();
-
-            Optional<UserReadBook> userReadBookOptional;
-            try {
-                userReadBookOptional = userReadBookService.findByUserAndBook(username, book);
-
-            } catch (UsernameNotFoundException e) {
-                model.addAttribute("error", e.getMessage());
-                return "error-page";
-            }
-            if (userReadBookOptional.isPresent()) {
-                UserReadBook hasReadBook = userReadBookOptional.get();
-                try {
-                    this.userReadBookService.updateDates(hasReadBook, startedDate, finishedDate);
-                } catch (IllegalArgumentException e) {
-                    model.addAttribute("error", e.getMessage());
-                    return "error-page";
-                }
-                return "redirect:/books/details/" + id;
-            } else {
-                model.addAttribute("error", "User has not read this book");
-                return "error-page";
-            }
+        if (!bookService.existsById(id)) {
+            model.addAttribute("error", "Book not found");
+            return "error-page";
         }
-        model.addAttribute("error", "Book not found");
-        return "error-page";
+        String username = user.getUsername();
+
+        try {
+            this.userReadBookService.updateDates(username, id, startedDate, finishedDate);
+        } catch (IllegalArgumentException | UserReadBookNotFoundException e) {
+            model.addAttribute("error", e.getMessage());
+            return "error-page";
+        }
+        return "redirect:/books/details/" + id;
+
     }
 
     @GetMapping("/remove-read/{id}")
     public String removeReadBook(@PathVariable Long id, Model model, @AuthenticationPrincipal UserDetails user) {
-        Optional<Book> bookOptional = bookService.findById(id);
-        if (bookOptional.isPresent()) {
-            Book book = bookOptional.get();
-            String username = user.getUsername();
-
-            try {
-                this.userReadBookService.deleteByUserAndBook(username, book);
-            } catch (UsernameNotFoundException e) {
-                model.addAttribute("error", e.getMessage());
-                return "error-page";
-            }
-
-            return "redirect:/books/details/" + id;
+        String username = user.getUsername();
+        try {
+            this.userReadBookService.deleteByUsernameAndBookId(username, id);
+        } catch (UserReadBookNotFoundException e) {
+            model.addAttribute("error", e.getMessage());
+            return "error-page";
         }
-        model.addAttribute("error", "Book not found");
-        return "error-page";
+        return "redirect:/books/details/" + id;
     }
 
     @PostMapping("/review/{id}")
     public String reviewBook(@PathVariable Long id, @RequestParam(required = true) String review,
                              Model model, @AuthenticationPrincipal UserDetails user) {
-        if (this.bookService.findById(id).isPresent()) {
-            String username = user.getUsername();
+        String username = user.getUsername();
 
-            try {
-                this.reviewService.addReview(review, username, id);
-            } catch (UsernameNotFoundException | BookNotFoundException | IllegalArgumentException e) {
-                model.addAttribute("error", e.getMessage());
-                return "error-page";
-            }
-
-            return "redirect:/books/details/" + id;
+        try {
+            this.reviewService.addReview(review, username, id);
+        } catch (UsernameNotFoundException | BookNotFoundException | IllegalArgumentException |
+                 UserReadBookNotFoundException e) {
+            model.addAttribute("error", e.getMessage());
+            return "error-page";
         }
-        model.addAttribute("error", "Book not found");
-        return "error-page";
+
+        return "redirect:/books/details/" + id;
     }
 
     @GetMapping("/read")
@@ -252,19 +208,9 @@ public class BookController {
         String username = user.getUsername();
         List<UserReadBook> readBooks;
         if (search == null || search.isBlank()) {
-            try {
-                readBooks = this.userReadBookService.findAllByUser(username);
-            } catch (UsernameNotFoundException e) {
-                model.addAttribute("error", e.getMessage());
-                return "error-page";
-            }
+            readBooks = this.userReadBookService.findAllByUsername(username);
         } else {
-            try {
-                readBooks = this.userReadBookService.findAllByUserAndBookTitleContainingIgnoreCase(username, search);
-            } catch (UsernameNotFoundException | IllegalArgumentException e) {
-                model.addAttribute("error", e.getMessage());
-                return "error-page";
-            }
+            readBooks = this.userReadBookService.findAllByUserAndBookTitleContainingIgnoreCase(username, search);
         }
         model.addAttribute("readBooks", readBooks);
         model.addAttribute("search", search);
@@ -274,22 +220,15 @@ public class BookController {
     @GetMapping("/to-read/{id}")
     public String toggleToReadBook(@PathVariable Long id, @RequestParam(required = true) String redirect,
                                    Model model, @AuthenticationPrincipal UserDetails user) {
-        Optional<Book> bookOptional = bookService.findById(id);
-        if (bookOptional.isPresent()) {
-            Book book = bookOptional.get();
-            String username = user.getUsername();
-
-            try {
-                this.toReadBookService.toggleToRead(username, book);
-            } catch (UsernameNotFoundException e) {
-                model.addAttribute("error", e.getMessage());
-                return "error-page";
-            }
-
-            return "redirect:" + redirect;
+        String username = user.getUsername();
+        try {
+            this.toReadBookService.toggleToRead(username, id);
+        } catch (UsernameNotFoundException | BookNotFoundException e) {
+            model.addAttribute("error", e.getMessage());
+            return "error-page";
         }
-        model.addAttribute("error", "Book not found");
-        return "error-page";
+
+        return "redirect:" + redirect;
     }
 
     @GetMapping("/to-read")
@@ -298,19 +237,9 @@ public class BookController {
         String username = user.getUsername();
         List<ToReadBook> toReadBooks;
         if (search == null || search.isBlank()) {
-            try {
-                toReadBooks = this.toReadBookService.findAllByUser(username);
-            } catch (UsernameNotFoundException e) {
-                model.addAttribute("error", e.getMessage());
-                return "error-page";
-            }
+            toReadBooks = this.toReadBookService.findAllByUsername(username);
         } else {
-            try {
-                toReadBooks = this.toReadBookService.findAllByUserAndBookTitleContainingIgnoreCase(username, search);
-            } catch (UsernameNotFoundException | IllegalArgumentException e) {
-                model.addAttribute("error", e.getMessage());
-                return "error-page";
-            }
+            toReadBooks = this.toReadBookService.findAllByUserAndBookTitleContainingIgnoreCase(username, search);
         }
 
         model.addAttribute("toReadBooks", toReadBooks);

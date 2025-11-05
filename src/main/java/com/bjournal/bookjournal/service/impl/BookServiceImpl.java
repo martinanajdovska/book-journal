@@ -27,6 +27,11 @@ public class BookServiceImpl implements BookService {
         this.bookRepository = bookRepository;
     }
 
+    @Override
+    public boolean existsById(Long id) {
+        return this.bookRepository.existsById(id);
+    }
+
     public Optional<Book> findById(Long id) {
         return this.bookRepository.findById(id);
     }
@@ -92,6 +97,7 @@ public class BookServiceImpl implements BookService {
 
     @Override
     public void deleteById(Long id) {
+        this.findById(id).orElseThrow(() -> new BookNotFoundException(id));
         bookRepository.deleteById(id);
     }
 }

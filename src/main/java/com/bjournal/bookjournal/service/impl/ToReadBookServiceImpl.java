@@ -3,6 +3,8 @@ package com.bjournal.bookjournal.service.impl;
 import com.bjournal.bookjournal.model.Book;
 import com.bjournal.bookjournal.model.ToReadBook;
 import com.bjournal.bookjournal.model.User;
+import com.bjournal.bookjournal.model.exceptions.BookNotFoundException;
+import com.bjournal.bookjournal.repository.BookRepository;
 import com.bjournal.bookjournal.repository.ToReadBookRepository;
 import com.bjournal.bookjournal.repository.UserRepository;
 import com.bjournal.bookjournal.service.ToReadBookService;
@@ -17,10 +19,12 @@ import java.util.Optional;
 public class ToReadBookServiceImpl implements ToReadBookService {
     private final ToReadBookRepository toReadBookRepository;
     private final UserRepository userRepository;
+    private final BookRepository bookRepository;
 
-    public ToReadBookServiceImpl(ToReadBookRepository toReadBookRepository, UserRepository userRepository) {
+    public ToReadBookServiceImpl(ToReadBookRepository toReadBookRepository, UserRepository userRepository, BookRepository bookRepository) {
         this.toReadBookRepository = toReadBookRepository;
         this.userRepository = userRepository;
+        this.bookRepository = bookRepository;
     }
 
     @Override
@@ -30,30 +34,24 @@ public class ToReadBookServiceImpl implements ToReadBookService {
 
     @Transactional
     @Override
-    public void toggleToRead(String username, Book book) {
+    public void toggleToRead(String username, Long bookId) {
         User user = this.userRepository.findByUsername(username).orElseThrow(() -> new UsernameNotFoundException("Username not found"));
+        Book book = this.bookRepository.findById(bookId).orElseThrow(()->new BookNotFoundException(bookId));
         if (this.toReadBookRepository.existsToReadBookByUserAndBook(user,book)) this.toReadBookRepository.deleteToReadBookByUserAndBook(user,book);
         else this.toReadBookRepository.save(new ToReadBook(book, user));
     }
 
     @Override
-    public List<ToReadBook> findAllByUser(String username) {
-        User user = this.userRepository.findByUsername(username).orElseThrow(() -> new UsernameNotFoundException(username));
-        return this.toReadBookRepository.findAllByUser(user);
+    public List<ToReadBook> findAllByUsername(String username) {
+        return this.toReadBookRepository.findAllByUserUsername(username);
     }
 
-    @Override
-    public Optional<ToReadBook> findByUserAndBook(String username, Book book) {
-        User user  = this.userRepository.findByUsername(username).orElseThrow(() -> new UsernameNotFoundException(username));
-        return this.toReadBookRepository.findByUserAndBook(user, book);
+    public Optional<ToReadBook> findByUsernameAndBookId(String username, Long bookId) {
+        return this.toReadBookRepository.findByUserUsernameAndBookId(username, bookId);
     }
 
     @Override
     public List<ToReadBook> findAllByUserAndBookTitleContainingIgnoreCase(String username, String title) {
-        if (title == null || title.isBlank()) {
-            throw new IllegalArgumentException("invalid title");
-        }
-        User user  = this.userRepository.findByUsername(username).orElseThrow(() -> new UsernameNotFoundException(username));
-        return this.toReadBookRepository.findAllByUserAndBookTitleContainingIgnoreCase(user, title);
+        return this.toReadBookRepository.findAllByUserUsernameAndBookTitleContainingIgnoreCase(username, title);
     }
 }

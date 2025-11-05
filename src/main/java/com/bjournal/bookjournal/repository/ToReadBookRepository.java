@@ -11,9 +11,11 @@ import java.util.Optional;
 
 @Repository
 public interface ToReadBookRepository extends JpaRepository<ToReadBook, Long> {
-    List<ToReadBook> findAllByUser(User user);
-    Optional<ToReadBook> findByUserAndBook(User user, Book book);
+    List<ToReadBook> findAllByUserUsername(String username);
+    Optional<ToReadBook> findByUserUsernameAndBookId(String username, Long bookId);
     void deleteToReadBookByUserAndBook(User user, Book book);
     boolean existsToReadBookByUserAndBook(User user, Book book);
-    List<ToReadBook> findAllByUserAndBookTitleContainingIgnoreCase(User user, String title);
+    List<ToReadBook> findAllByUserUsernameAndBookTitleContainingIgnoreCase(String username, String title);
+
+    List<ToReadBook> user(User user);
 }

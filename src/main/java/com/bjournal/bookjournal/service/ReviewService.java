@@ -8,6 +8,6 @@ import java.util.List;
 
 public interface ReviewService {
     List<Review> findAllByUser(User user);
-    List<Review> findAllByBook(Book book);
+    List<Review> findAllByBookId(Long bookId);
     void addReview(String review, String username, Long bookId);
 }

@@ -12,6 +12,7 @@ public class Review {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
     private String review;
+    private Float rating;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "book_id")
@@ -21,9 +22,10 @@ public class Review {
     @JoinColumn(name = "user_id")
     private User user;
 
-    public Review(String review, Book book, User user) {
+    public Review(String review, Book book, User user, Float rating) {
         this.review = review;
         this.book = book;
         this.user = user;
+        this.rating = rating;
     }
 }

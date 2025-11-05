@@ -1,6 +1,7 @@
 package com.bjournal.bookjournal.service.impl;
 
 import com.bjournal.bookjournal.model.Book;
+import com.bjournal.bookjournal.model.enumerations.Genre;
 import com.bjournal.bookjournal.model.exceptions.BookNotFoundException;
 import com.bjournal.bookjournal.repository.BookRepository;
 import com.bjournal.bookjournal.service.BookService;
@@ -51,14 +52,15 @@ public class BookServiceImpl implements BookService {
     }
 
     @Override
-    public void add(String title, String author, String description, MultipartFile file, Integer pages) throws IOException {
+    public void add(String title, String author, String description, MultipartFile file, Integer pages, Genre genre) throws IOException {
         if (title == null || author == null || description == null
                 || file == null || title.isBlank() || author.isBlank()
-                || description.isBlank() || file.isEmpty() || pages == null || pages == 0) {
+                || description.isBlank() || file.isEmpty() || pages == null || pages == 0
+                || genre == null) {
             throw new IllegalArgumentException("Invalid input");
         }
         String filePath = saveImage(file, title, author);
-        bookRepository.save(new Book(title, author, description, filePath, pages));
+        bookRepository.save(new Book(title, author, description, filePath, pages, genre));
     }
 
     private String saveImage(MultipartFile file, String title, String author) throws IOException {
@@ -76,21 +78,25 @@ public class BookServiceImpl implements BookService {
 
     @Override
     public Optional<Book> update(Long id, String title, String author, String description,
-                                 MultipartFile file, Integer pages) throws IOException {
+                                 MultipartFile file, Integer pages, Genre genre) throws IOException {
         Book book = findById(id).orElseThrow(() -> new BookNotFoundException(id));
 
         if (title == null || author == null || description == null
-                || file == null || title.isBlank() || author.isBlank()
-                || description.isBlank() || file.isEmpty() || pages == null || pages == 0) {
+                || title.isBlank() || author.isBlank()
+                || description.isBlank() || pages == null || pages == 0 || genre == null) {
             throw new IllegalArgumentException("Invalid input");
         }
-        String filePath = saveImage(file, title, author);
+        if (file != null && !file.isEmpty()) {
+            String filePath = saveImage(file, title, author);
+            book.setFile(filePath);
+        }
+
 
         book.setTitle(title);
         book.setAuthor(author);
         book.setDescription(description);
-        book.setFile(filePath);
         book.setPages(pages);
+        book.setGenre(genre);
         bookRepository.save(book);
         return Optional.of(book);
     }

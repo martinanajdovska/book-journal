@@ -41,8 +41,8 @@ public class ReviewServiceImpl implements ReviewService {
     }
 
     @Override
-    public void addReview(String text, String username, Long bookId) {
-        if (text==null || text.isBlank()){
+    public void addReview(String text, String username, Long bookId, Float rating) {
+        if ((text==null || text.isBlank()) && rating == null) {
             throw new IllegalArgumentException("Review is empty");
         }
 
@@ -51,8 +51,13 @@ public class ReviewServiceImpl implements ReviewService {
         // if user hasn't read this book then they can't add a review
         UserReadBook userReadBook = this.userReadBookService.findByUsernameAndBookId(username,bookId).orElseThrow(()-> new UserReadBookNotFoundException(username,bookId));
 
-        Review review = new Review(text, book, user);
+        Review review = new Review(text, book, user, rating);
         reviewRepository.save(review);
+    }
+
+    @Override
+    public Float averageRatingByBookId(Long bookId) {
+        return this.reviewRepository.averageRatingByBookId(bookId);
     }
 
 }

@@ -54,12 +54,18 @@
                            required>
                 </div>
                 <div class="form-group">
+                    <select name="genre" class="form-control" id="genre">
+                        <option th:each="genreOpt : ${genres}"
+                                th:selected="${book != null && genreOpt == book.getGenre()}"
+                                th:value="${genreOpt}" th:text="${genreOpt.getDisplayValue()}"></option>
+                    </select>
+                </div>
+                <div class="form-group">
                     <th:block th:if="${book} != null">
                         <img style="max-height: 20rem;" th:src="@{'/uploads/'+${book.getFile()}}">
                     </th:block>
                     <input type="file" name="file" accept="image/*"
-                    th:value="(${book} != null ? '/uploads/'+${book.getFile()} : null)"
-                           required>
+                    th:value="(${book} != null ? '/uploads/'+${book.getFile()} : null)">
                 </div>
                 <button id="submit" type="submit" class="btn btn-primary">Submit</button>
                 <a type="button" class="btn btn-primary" href="/">Back</a>

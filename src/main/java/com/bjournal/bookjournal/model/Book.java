@@ -1,5 +1,6 @@
 package com.bjournal.bookjournal.model;
 
+import com.bjournal.bookjournal.model.enumerations.Genre;
 import jakarta.persistence.*;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -20,12 +21,14 @@ public class Book {
     private String description;
     private String file;
     private Integer pages;
+    private Genre genre;
 
-    public Book(String title, String author, String description, String file, Integer pages) {
+    public Book(String title, String author, String description, String file, Integer pages, Genre genre) {
         this.title = title;
         this.author = author;
         this.description = description;
         this.file = file;
         this.pages = pages;
+        this.genre = genre;
     }
 }

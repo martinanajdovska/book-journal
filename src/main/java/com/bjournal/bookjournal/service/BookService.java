@@ -1,6 +1,7 @@
 package com.bjournal.bookjournal.service;
 
 import com.bjournal.bookjournal.model.Book;
+import com.bjournal.bookjournal.model.enumerations.Genre;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
@@ -13,7 +14,7 @@ public interface BookService {
     List<Book> findAll();
     List<Book> findAllByAuthor(String author);
     List<Book> findAllByTitle(String title);
-    void add(String title, String author, String description, MultipartFile file, Integer pages) throws IOException;
-    Optional<Book> update(Long id, String title, String author,  String description, MultipartFile file, Integer pages) throws IOException;
+    void add(String title, String author, String description, MultipartFile file, Integer pages, Genre genre) throws IOException;
+    Optional<Book> update(Long id, String title, String author,  String description, MultipartFile file, Integer pages, Genre genre) throws IOException;
     void deleteById(Long id);
 }

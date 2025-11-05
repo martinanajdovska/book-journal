@@ -4,6 +4,7 @@ import com.bjournal.bookjournal.model.Book;
 import com.bjournal.bookjournal.model.Review;
 import com.bjournal.bookjournal.model.ToReadBook;
 import com.bjournal.bookjournal.model.UserReadBook;
+import com.bjournal.bookjournal.model.enumerations.Genre;
 import com.bjournal.bookjournal.model.exceptions.BookNotFoundException;
 import com.bjournal.bookjournal.model.exceptions.UserReadBookNotFoundException;
 import com.bjournal.bookjournal.service.BookService;
@@ -20,8 +21,11 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 import java.time.LocalDate;
+import java.util.Arrays;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Controller
 @RequestMapping("/books")
@@ -39,14 +43,16 @@ public class BookController {
     }
 
     @GetMapping("/add")
-    public String getAddBookPage() {
+    public String getAddBookPage(Model model) {
+        List<Genre> genres = Arrays.stream(Genre.values()).sorted(Comparator.comparing(Enum::name)).toList();
+        model.addAttribute("genres", genres);
         return "book-form";
     }
 
     @PostMapping("/add")
     public String addBook(@RequestParam(required = true) String title, @RequestParam(required = true) String author,
                           @RequestParam(required = true) String description, @RequestParam(required = true) MultipartFile file,
-                          @RequestParam(required = true) Integer pages, Model model) {
+                          @RequestParam(required = true) Integer pages, @RequestParam(required = true) Genre genre, Model model) {
         String contentType = file.getContentType();
         if (contentType == null || !contentType.equals("image/jpeg") && !contentType.equals("image/png")) {
             model.addAttribute("error", "Only JPEG or PNG images are allowed");
@@ -54,7 +60,7 @@ public class BookController {
             return "book-form";
         }
         try {
-            this.bookService.add(title, author, description, file, pages);
+            this.bookService.add(title, author, description, file, pages, genre);
         } catch (IllegalArgumentException e) {
             model.addAttribute("error", e.getMessage());
             model.addAttribute("hasError", true);
@@ -70,6 +76,8 @@ public class BookController {
     @GetMapping("/edit/{id}")
     public String getEditBookPage(@PathVariable Long id, Model model) {
         Optional<Book> book = bookService.findById(id);
+        List<Genre> genres = Arrays.stream(Genre.values()).sorted(Comparator.comparing(Enum::name)).toList();
+        model.addAttribute("genres", genres);
         if (book.isPresent()) {
             model.addAttribute("book", book.get());
             return "book-form";
@@ -81,16 +89,19 @@ public class BookController {
     @PostMapping("/edit/{id}")
     public String editBook(@PathVariable Long id, @RequestParam(required = true) String title,
                            @RequestParam(required = true) String author, @RequestParam(required = true) String description,
-                           @RequestParam(required = true) MultipartFile file, @RequestParam(required = true) Integer pages,
-                           Model model) {
-        String contentType = file.getContentType();
-        if (contentType == null || !contentType.equals("image/jpeg") && !contentType.equals("image/png")) {
-            model.addAttribute("error", "Only JPEG or PNG images are allowed");
-            model.addAttribute("hasError", true);
-            return "book-form";
+                           @RequestParam(required = false) MultipartFile file, @RequestParam(required = true) Integer pages,
+                           @RequestParam(required = true) Genre genre, Model model) {
+        if (file != null && !file.isEmpty()) {
+            String contentType = file.getContentType();
+            if (contentType == null || !contentType.equals("image/jpeg") && !contentType.equals("image/png")) {
+                model.addAttribute("error", "Only JPEG or PNG images are allowed");
+                model.addAttribute("hasError", true);
+                return "book-form";
+            }
         }
+
         try {
-            this.bookService.update(id, title, author, description, file, pages);
+            this.bookService.update(id, title, author, description, file, pages, genre);
         } catch (BookNotFoundException e) {
             model.addAttribute("error", e.getMessage());
             return "error-page";
@@ -133,12 +144,15 @@ public class BookController {
 
         List<Review> reviews = this.reviewService.findAllByBookId(id);
         Optional<UserReadBook> userReadBookOptional = userReadBookService.findByUsernameAndBookId(username, id);
+        Float averageRating = this.reviewService.averageRatingByBookId(id);
 
         model.addAttribute("toReadBook", toReadBookService.findByUsernameAndBookId(username, id).isPresent());
         model.addAttribute("book", book.get());
         model.addAttribute("reviews", reviews);
         model.addAttribute("hasRead", userReadBookOptional.isPresent());
         model.addAttribute("userReadBook", userReadBookOptional.orElse(null));
+        model.addAttribute("ratings", List.of(1,1.5,2,2.5,3,3.5,4,4.5,5));
+        model.addAttribute("averageRating", averageRating);
         return "book-details";
     }
 
@@ -188,11 +202,11 @@ public class BookController {
 
     @PostMapping("/review/{id}")
     public String reviewBook(@PathVariable Long id, @RequestParam(required = true) String review,
-                             Model model, @AuthenticationPrincipal UserDetails user) {
+                             Model model, @AuthenticationPrincipal UserDetails user, @RequestParam(required = false) Float rating) {
         String username = user.getUsername();
 
         try {
-            this.reviewService.addReview(review, username, id);
+            this.reviewService.addReview(review, username, id, rating);
         } catch (UsernameNotFoundException | BookNotFoundException | IllegalArgumentException |
                  UserReadBookNotFoundException e) {
             model.addAttribute("error", e.getMessage());

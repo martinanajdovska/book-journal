@@ -18,6 +18,8 @@
             <h3 th:text="${book.getTitle()}"></h3>
             <h2 th:text="${book.getAuthor()}"></h2>
             <p th:text="'Pages: ' + ${book.getPages()}"></p>
+            <p th:text="${book.getGenre().getDisplayValue()}"></p>
+            <p th:text="'Average rating: ' + (${averageRating != null ? averageRating : 'No ratings yet.'})"></p>
             <a class="btn btn-sm btn-info" th:text="${!toReadBook}?'To read':'Remove from to-read'" th:href="@{'/books/to-read/{id}?redirect=/books/details/{id}' (id=${book.getId()})}"></a>
             <a class="btn btn-sm btn-info" th:if="${!hasRead}" th:href="${'/books/read/'+book.getId()}">Mark as read</a>
             <a class="btn btn-sm btn-info" th:if="${hasRead}" th:href="${'/books/remove-read/'+book.getId()}">Remove from read</a>
@@ -53,6 +55,14 @@
             <form method="post" th:action="'/books/review/'+${book.getId()}">
                 <label for="review">Add review:</label>
                 <textarea class="form-control" name="review" id="review" cols="50" rows="3" placeholder="Enter review"></textarea>
+                <div class="form-group" style="width: 80px;">
+                    <label for="rating">Rating:</label>
+                    <select name="rating" class="form-control" id="rating">
+                        <option value="" selected></option>
+                        <option th:each="ratingOpt : ${ratings}"
+                                th:value="${ratingOpt}" th:text="${ratingOpt}"></option>
+                    </select>
+                </div>
                 <input type="submit" class="btn btn-primary" value="Submit">
             </form>
         </th:block>
@@ -64,6 +74,8 @@
                 <p class="mb-0" th:text="'User: ' + ${review.getUser().getUsername()}"></p>
                 <hr>
                 <p th:text="${review.getReview()}"></p>
+                <hr>
+                <p th:if="${review.getRating()!=null}" th:text="${review.getRating()}"></p>
             </div>
         </th:block>
     </div>

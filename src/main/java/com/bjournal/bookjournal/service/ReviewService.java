@@ -9,5 +9,6 @@ import java.util.List;
 public interface ReviewService {
     List<Review> findAllByUser(User user);
     List<Review> findAllByBookId(Long bookId);
-    void addReview(String review, String username, Long bookId);
+    void addReview(String review, String username, Long bookId, Float rating);
+    Float averageRatingByBookId(Long bookId);
 }

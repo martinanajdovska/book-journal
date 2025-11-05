@@ -1,6 +1,5 @@
 package com.bjournal.bookjournal.service;
 
-import com.bjournal.bookjournal.model.Book;
 import com.bjournal.bookjournal.model.UserReadBook;
 
 import java.time.LocalDate;

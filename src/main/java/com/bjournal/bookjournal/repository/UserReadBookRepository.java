@@ -1,7 +1,5 @@
 package com.bjournal.bookjournal.repository;
 
-import com.bjournal.bookjournal.model.Book;
-import com.bjournal.bookjournal.model.User;
 import com.bjournal.bookjournal.model.UserReadBook;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;

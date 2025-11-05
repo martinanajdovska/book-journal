@@ -1,16 +1,10 @@
 package com.bjournal.bookjournal.controller;
 
-import com.bjournal.bookjournal.model.Book;
-import com.bjournal.bookjournal.model.Review;
-import com.bjournal.bookjournal.model.ToReadBook;
-import com.bjournal.bookjournal.model.UserReadBook;
+import com.bjournal.bookjournal.model.*;
 import com.bjournal.bookjournal.model.enumerations.Genre;
 import com.bjournal.bookjournal.model.exceptions.BookNotFoundException;
 import com.bjournal.bookjournal.model.exceptions.UserReadBookNotFoundException;
-import com.bjournal.bookjournal.service.BookService;
-import com.bjournal.bookjournal.service.ReviewService;
-import com.bjournal.bookjournal.service.ToReadBookService;
-import com.bjournal.bookjournal.service.UserReadBookService;
+import com.bjournal.bookjournal.service.*;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
@@ -34,12 +28,16 @@ public class BookController {
     private final ReviewService reviewService;
     private final UserReadBookService userReadBookService;
     private final ToReadBookService toReadBookService;
+    private final QuoteService quoteService;
+    private final CurrentlyReadingBookService currentlyReadingBookService;
 
-    public BookController(BookService bookService, ReviewService reviewService, UserReadBookService userReadBookService, ToReadBookService toReadBookService) {
+    public BookController(BookService bookService, ReviewService reviewService, UserReadBookService userReadBookService, ToReadBookService toReadBookService, QuoteService quoteService, CurrentlyReadingBookService currentlyReadingBookService) {
         this.bookService = bookService;
         this.reviewService = reviewService;
         this.userReadBookService = userReadBookService;
         this.toReadBookService = toReadBookService;
+        this.quoteService = quoteService;
+        this.currentlyReadingBookService = currentlyReadingBookService;
     }
 
     @GetMapping("/add")
@@ -145,6 +143,7 @@ public class BookController {
         List<Review> reviews = this.reviewService.findAllByBookId(id);
         Optional<UserReadBook> userReadBookOptional = userReadBookService.findByUsernameAndBookId(username, id);
         Float averageRating = this.reviewService.averageRatingByBookId(id);
+        List<Quote> quotes = this.quoteService.findAllByUsernameAndBookId(username, id);
 
         model.addAttribute("toReadBook", toReadBookService.findByUsernameAndBookId(username, id).isPresent());
         model.addAttribute("book", book.get());
@@ -153,6 +152,7 @@ public class BookController {
         model.addAttribute("userReadBook", userReadBookOptional.orElse(null));
         model.addAttribute("ratings", List.of(1,1.5,2,2.5,3,3.5,4,4.5,5));
         model.addAttribute("averageRating", averageRating);
+        model.addAttribute("quotes", quotes);
         return "book-details";
     }
 
@@ -201,12 +201,28 @@ public class BookController {
     }
 
     @PostMapping("/review/{id}")
-    public String reviewBook(@PathVariable Long id, @RequestParam(required = true) String review,
+    public String addReview(@PathVariable Long id, @RequestParam(required = true) String review,
                              Model model, @AuthenticationPrincipal UserDetails user, @RequestParam(required = false) Float rating) {
         String username = user.getUsername();
 
         try {
             this.reviewService.addReview(review, username, id, rating);
+        } catch (UsernameNotFoundException | BookNotFoundException | IllegalArgumentException |
+                 UserReadBookNotFoundException e) {
+            model.addAttribute("error", e.getMessage());
+            return "error-page";
+        }
+
+        return "redirect:/books/details/" + id;
+    }
+
+    @PostMapping("/quote/{id}")
+    public String addQuote(@PathVariable Long id, @RequestParam(required = true) String quote,
+                             Model model, @AuthenticationPrincipal UserDetails user) {
+        String username = user.getUsername();
+
+        try {
+            this.quoteService.add(username, id, quote);
         } catch (UsernameNotFoundException | BookNotFoundException | IllegalArgumentException |
                  UserReadBookNotFoundException e) {
             model.addAttribute("error", e.getMessage());
@@ -258,5 +274,34 @@ public class BookController {
 
         model.addAttribute("toReadBooks", toReadBooks);
         return "to-read-books";
+    }
+
+    @GetMapping("/currently-reading")
+    public String getCurrentlyReadingBooksPage(Model model, @AuthenticationPrincipal UserDetails user,
+                                               @RequestParam(required = false) String search) {
+        String username = user.getUsername();
+        List<CurrentlyReadingBook> currentlyReadingBooks;
+        if (search == null || search.isBlank()) {
+            currentlyReadingBooks = this.currentlyReadingBookService.findAllByUsername(username);
+        } else {
+            currentlyReadingBooks = this.currentlyReadingBookService.findAllByUsernameAndBookTitleContainingIgnoreCase(username, search);
+        }
+        model.addAttribute("currentlyReadingBooks", currentlyReadingBooks);
+        return "currently-reading-books";
+    }
+
+//    TODO: make a form instead
+    @GetMapping("/currently-reading/{id}")
+    public String toggleCurrentlyReadingBook(@PathVariable Long id, @RequestParam(required = true) String redirect,
+                                   Model model, @AuthenticationPrincipal UserDetails user) {
+        String username = user.getUsername();
+        try {
+            this.currentlyReadingBookService.toggleCurrentlyReading(username, id);
+        } catch (UsernameNotFoundException | BookNotFoundException e) {
+            model.addAttribute("error", e.getMessage());
+            return "error-page";
+        }
+
+        return "redirect:" + redirect;
     }
 }

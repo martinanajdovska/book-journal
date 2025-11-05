@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.w3.org/1999/xhtml">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.3.1/dist/css/bootstrap.min.css"
+          integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+</head>
+<body>
+<div class="container mb-4">
+    <div class="row">
+        <div class="col-12 justify-content-center my-5">
+            <form action="/books/read" method="get">
+                <input type="text" name="search" th:value="${search}" placeholder="Search" size="50">
+                <button type="submit" class="btn btn-info">Search</button>
+            </form>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-12 justify-content-center mb-3">
+            <a class="btn btn-info" href="/books/to-read">View to-read list</a>
+            <a class="btn btn-primary" href="/">Back</a>
+        </div>
+    </div>
+    <div class="row" th:if="${currentlyReadingBooks.size() > 0}">
+        <div th:each="currentlyReadingBook : ${currentlyReadingBooks}" class="card col-3 m-3" style="width: 68rem; max-height: 26rem;">
+            <a th:href="@{'/books/details/{id}' (id=${currentlyReadingBook.getBook().getId()})}">
+                <img class="card-img-top py-2" style="width: 16rem; max-height: 15rem;"
+                     th:src="@{'/uploads/'+${currentlyReadingBook.getBook().getFile()}}" alt="Card image cap">
+            </a>
+            <div class="card-body">
+                <a th:href="@{'/books/details/{id}' (id=${currentlyReadingBook.getBook().getId()})}"
+                   class="text-reset text-decoration-none">
+                    <h5 class="card-title"
+                        th:text="${currentlyReadingBook.getBook().getTitle()}+' - '+${currentlyReadingBook.getBook().getAuthor()}"></h5>
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+</body>
+</html>

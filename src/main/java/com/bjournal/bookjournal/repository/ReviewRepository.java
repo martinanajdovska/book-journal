@@ -1,6 +1,5 @@
 package com.bjournal.bookjournal.repository;
 
-import com.bjournal.bookjournal.model.Book;
 import com.bjournal.bookjournal.model.Review;
 import com.bjournal.bookjournal.model.User;
 import org.springframework.data.jpa.repository.JpaRepository;

@@ -1,4 +1,4 @@
-package com.bjournal.bookjournal.controller;
+package com.bjournal.bookjournal.controller.account;
 
 import com.bjournal.bookjournal.model.User;
 import com.bjournal.bookjournal.service.UserService;
@@ -13,10 +13,10 @@ import java.util.Optional;
 
 @Controller
 @RequestMapping("/user")
-public class UserController {
+public class UserProfileController {
     private final UserService userService;
 
-    public UserController(UserService userService) {
+    public UserProfileController(UserService userService) {
         this.userService = userService;
     }
 
@@ -29,6 +29,6 @@ public class UserController {
             return "error-page";
         }
         model.addAttribute("user", optionalUser.get());
-        return "profile";
+        return "/account/profile";
     }
 }

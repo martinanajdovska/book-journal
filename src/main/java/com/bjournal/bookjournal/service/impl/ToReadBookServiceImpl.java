@@ -4,6 +4,7 @@ import com.bjournal.bookjournal.model.Book;
 import com.bjournal.bookjournal.model.ToReadBook;
 import com.bjournal.bookjournal.model.User;
 import com.bjournal.bookjournal.model.exceptions.BookNotFoundException;
+import com.bjournal.bookjournal.model.exceptions.ToReadBookNotFoundException;
 import com.bjournal.bookjournal.repository.ToReadBookRepository;
 import com.bjournal.bookjournal.service.BookService;
 import com.bjournal.bookjournal.service.ToReadBookService;
@@ -33,13 +34,19 @@ public class ToReadBookServiceImpl implements ToReadBookService {
         return this.toReadBookRepository.findById(id);
     }
 
-    @Transactional
     @Override
-    public void toggleToRead(String username, Long bookId) {
+    public void add(String username, Long bookId) {
         User user = this.userService.findByUsername(username).orElseThrow(() -> new UsernameNotFoundException("Username not found"));
         Book book = this.bookService.findById(bookId).orElseThrow(()->new BookNotFoundException(bookId));
-        if (this.toReadBookRepository.existsToReadBookByUserAndBook(user,book)) this.toReadBookRepository.deleteToReadBookByUserAndBook(user,book);
-        else this.toReadBookRepository.save(new ToReadBook(book, user));
+
+        this.toReadBookRepository.save(new ToReadBook(book, user));
+    }
+
+    @Transactional
+    @Override
+    public void delete(String username, Long bookId) {
+        ToReadBook toReadBook = this.toReadBookRepository.findByUserUsernameAndBookId(username, bookId).orElseThrow(()->new ToReadBookNotFoundException());
+        this.toReadBookRepository.delete(toReadBook);
     }
 
     @Override

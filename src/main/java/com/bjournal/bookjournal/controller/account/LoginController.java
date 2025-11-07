@@ -1,4 +1,4 @@
-package com.bjournal.bookjournal.controller;
+package com.bjournal.bookjournal.controller.account;
 
 import com.bjournal.bookjournal.model.User;
 import com.bjournal.bookjournal.service.AuthService;
@@ -17,7 +17,7 @@ public class LoginController {
 
     @GetMapping
     public String getLoginPage() {
-        return "login";
+        return "/account/login";
     }
     @PostMapping
     public String login(HttpServletRequest request, Model model) {
@@ -33,7 +33,7 @@ public class LoginController {
         } catch (RuntimeException ex) {
             model.addAttribute("hasError", true);
             model.addAttribute("error", ex.getMessage());
-            return "login";
+            return "/account/login";
         }
     }
 }

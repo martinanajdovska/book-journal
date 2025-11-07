@@ -1,4 +1,4 @@
-package com.bjournal.bookjournal.controller;
+package com.bjournal.bookjournal.controller.account;
 
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.stereotype.Controller;

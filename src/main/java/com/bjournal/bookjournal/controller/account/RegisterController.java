@@ -1,4 +1,4 @@
-package com.bjournal.bookjournal.controller;
+package com.bjournal.bookjournal.controller.account;
 
 import com.bjournal.bookjournal.model.enumerations.Role;
 import com.bjournal.bookjournal.service.UserService;
@@ -25,7 +25,7 @@ public class RegisterController {
             model.addAttribute("error", error);
         }
 
-        return "register";
+        return "/account/register";
     }
 
     @PostMapping

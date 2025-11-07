@@ -23,9 +23,9 @@
         </div>
         <div class="row">
             <div class="col-12 justify-content-center mb-3">
-                <a class="btn btn-info" href="/books/read">View already read books</a>
-                <a class="btn btn-info" href="/books/to-read">View to-read list</a>
-                <a class="btn btn-info" href="/books/currently-reading">View currently reading list</a>
+                <a class="btn btn-info" href="/read-books">View already read books</a>
+                <a class="btn btn-info" href="/to-read-books">View to-read list</a>
+                <a class="btn btn-info" href="/currently-reading-books">View currently reading list</a>
             </div>
         </div>
         <div class="row" th:if="${books.size() > 0}">
@@ -39,7 +39,7 @@
                         <h5 class="card-title" th:text="${book.getTitle()}+' - '+${book.getAuthor()}"></h5>
                     </a>
                     <th:block sec:authorize="hasRole('ROLE_ADMIN')">
-                        <a th:href="@{'/books/delete/{id}' (id=${book.getId()})}" class="btn btn-sm btn-danger">
+                        <a th:href="@{'/books/remove/{id}' (id=${book.getId()})}" class="btn btn-sm btn-danger">
                             <i class="fa fa-trash">Delete</i>
                         </a>
                     </th:block>

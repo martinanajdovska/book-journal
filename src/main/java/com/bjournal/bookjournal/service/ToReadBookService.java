@@ -7,7 +7,8 @@ import java.util.Optional;
 
 public interface ToReadBookService {
     Optional<ToReadBook> findById(Long id);
-    void toggleToRead(String username, Long bookId);
+    void add(String username, Long bookId);
+    void delete(String username, Long bookId);
     List<ToReadBook> findAllByUsername(String username);
     Optional<ToReadBook> findByUsernameAndBookId(String username, Long bookId);
     List<ToReadBook> findAllByUserAndBookTitleContainingIgnoreCase(String username, String title);

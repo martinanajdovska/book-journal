@@ -22,16 +22,20 @@
             <p th:text="${book.getGenre().getDisplayValue()}"></p>
             <p th:text="'Average rating: ' + (${averageRating != null ? averageRating : 'No ratings yet.'})"></p>
 <!--            TODO: make selection of: to-read, read, currently-reading-->
-            <a class="btn btn-sm btn-info" th:text="${!toReadBook}?'To read':'Remove from to-read'"
-               th:href="@{'/books/to-read/{id}?redirect=/books/details/{id}' (id=${book.getId()})}"></a>
-            <a class="btn btn-sm btn-info" th:if="${!hasRead}" th:href="${'/books/read/'+book.getId()}">Mark as read</a>
-            <a class="btn btn-sm btn-info" th:if="${hasRead}" th:href="${'/books/remove-read/'+book.getId()}">Remove
+            <a class="btn btn-sm btn-info" th:if="${!toReadBook}"
+               th:href="@{'/to-read-books/add/{id}?redirect=/books/details/{id}' (id=${book.getId()})}">To-read</a>
+            <a class="btn btn-sm btn-info" th:if="${toReadBook}"
+               th:href="@{'/to-read-books/remove/{id}?redirect=/books/details/{id}' (id=${book.getId()})}">Remove from to-read</a>
+            <a class="btn btn-sm btn-info" th:if="${!hasRead}" th:href="${'/read-books/add/'+book.getId()}">Mark as read</a>
+            <a class="btn btn-sm btn-info" th:if="${hasRead}" th:href="${'/read-books/remove/'+book.getId()}">Remove
                 from read</a>
 <!--            TODO: make form for inputting starting date and reading progress-->
-            <a class="btn btn-sm btn-info"
-               th:href="@{'/books/currently-reading/{id}?redirect=/books/details/{id}' (id=${book.getId()})}">Currently reading</a>
+            <a class="btn btn-sm btn-info" th:if="${!isCurrentlyReading}"
+               th:href="@{'/currently-reading-books/add/{id}?redirect=/books/details/{id}' (id=${book.getId()})}">Currently reading</a>
+            <a class="btn btn-sm btn-info" th:if="${isCurrentlyReading}"
+               th:href="@{'/currently-reading-books/remove/{id}?redirect=/books/details/{id}' (id=${book.getId()})}">Not currently reading</a>
             <th:block th:if="${hasRead && userReadBook != null}">
-                <form method="post" th:action="'/books/read/'+${book.getId()}">
+                <form method="post" th:action="'/read-books/add/'+${book.getId()}">
                     <div class="form-group">
                         <label for="startedDate">Started date:</label>
                         <input type="date"
@@ -59,7 +63,7 @@
     </div>
     <div class="row border p-3">
         <th:block th:if="${hasRead}">
-            <form method="post" th:action="'/books/review/'+${book.getId()}" class="col-6">
+            <form method="post" th:action="'/reviews/add/'+${book.getId()}" class="col-6">
                 <label for="review">Add review:</label>
                 <textarea class="form-control" name="review" id="review" rows="3" placeholder="Enter review"></textarea>
                 <div class="form-group mt-2" style="width: 80px;">
@@ -72,7 +76,7 @@
                 </div>
                 <input type="submit" class="btn btn-primary" value="Submit review">
             </form>
-            <form method="post" th:action="'/books/quote/'+${book.getId()}" class="col-6">
+            <form method="post" th:action="'/quotes/add/'+${book.getId()}" class="col-6">
                 <label for="quote">Add quote:</label>
                 <textarea class="form-control" name="quote" id="quote" rows="3" placeholder="Enter quote"></textarea>
                 <input type="submit" class="btn btn-primary mt-3" value="Submit quote">

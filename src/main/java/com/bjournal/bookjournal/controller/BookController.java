@@ -155,22 +155,50 @@ public class BookController {
             return "error-page";
         }
 
-        List<Review> reviews = this.reviewService.findAllByBookId(id);
-        Optional<UserReadBook> userReadBookOptional = userReadBookService.findByUsernameAndBookId(username, id);
-        Float averageRating = this.reviewService.averageRatingByBookId(id);
-        List<Quote> quotes = this.quoteService.findAllByUsernameAndBookId(username, id);
-        Optional<CurrentlyReadingBook> currentlyReadingBookOptional = currentlyReadingBookService.findByUsernameAndBookId(username,id);
-
         model.addAttribute("toReadBook", toReadBookService.findByUsernameAndBookId(username, id).isPresent());
         model.addAttribute("book", book.get());
-        model.addAttribute("reviews", reviews);
-        model.addAttribute("hasRead", userReadBookOptional.isPresent());
-        model.addAttribute("userReadBook", userReadBookOptional.orElse(null));
-        model.addAttribute("isCurrentlyReading", currentlyReadingBookOptional.isPresent());
-        model.addAttribute("currentlyReadingBook", currentlyReadingBookOptional.orElse(null));
+        model.addAttribute("reviews", reviewService.findAllByBookId(id));
+        model.addAttribute("userReadBook", userReadBookService.findLastByUserUsernameAndBookId(username, id).orElse(null));
+        model.addAttribute("isCurrentlyReadingBook", currentlyReadingBookService.findByUsernameAndBookId(username,id).isPresent());
         model.addAttribute("ratings", List.of(1,1.5,2,2.5,3,3.5,4,4.5,5));
-        model.addAttribute("averageRating", averageRating);
-        model.addAttribute("quotes", quotes);
+        model.addAttribute("averageRating", reviewService.averageRatingByBookId(id));
+        model.addAttribute("quotes", quoteService.findAllByUsernameAndBookId(username, id));
+        return "/book/book-details";
+    }
+
+    @PostMapping("/state/{id}")
+    public String stateBook(@PathVariable Long id, @RequestParam(required = false) String state, Model model, @AuthenticationPrincipal UserDetails user) {
+        String username = user.getUsername();
+        Optional<Book> book = bookService.findById(id);
+        if (book.isEmpty()) {
+            model.addAttribute("error", "Book not found");
+            return "error-page";
+        }
+
+        switch (state) {
+            case "toRead":
+                currentlyReadingBookService.delete(username, id);
+                return "redirect:/to-read-books/add/"+id+"?redirect=/books/details/"+id;
+            case "hasRead":
+                toReadBookService.delete(username, id);
+                currentlyReadingBookService.delete(username, id);
+                return "redirect:/read-books/add/"+id;
+            case "isCurrentlyReading":
+                toReadBookService.delete(username, id);
+                return "redirect:/currently-reading-books/add/"+id+"?redirect=/books/details/"+id;
+            case "remove":
+                toReadBookService.delete(username, id);
+                currentlyReadingBookService.delete(username, id);
+                userReadBookService.delete(username, id);
+        }
+        model.addAttribute("userReadBook", null);
+        model.addAttribute("isCurrentlyReadingBook", false);
+        model.addAttribute("toReadBook", false);
+        model.addAttribute("book", book.get());
+        model.addAttribute("ratings", List.of(1,1.5,2,2.5,3,3.5,4,4.5,5));
+        model.addAttribute("quotes", quoteService.findAllByUsernameAndBookId(username, id));
+        model.addAttribute("averageRating", reviewService.averageRatingByBookId(id));
+        model.addAttribute("reviews", reviewService.findAllByBookId(id));
         return "/book/book-details";
     }
 }

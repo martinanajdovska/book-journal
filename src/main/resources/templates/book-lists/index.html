@@ -18,14 +18,17 @@
                 <button type="submit" class="btn btn-info">Search</button>
             </form>
         </div>
-        <div class="col-2 my-5">
+        <div class="col-1 my-5">
             <a class="btn btn-info text-white" href="/user/profile">Profile</a>
+        </div>
+        <div class="col-1 my-5">
+            <a class="btn btn-info text-white" href="/logout">Logout</a>
         </div>
         <div class="row">
             <div class="col-12 justify-content-center mb-3">
-                <a class="btn btn-info" href="/read-books">View already read books</a>
-                <a class="btn btn-info" href="/to-read-books">View to-read list</a>
-                <a class="btn btn-info" href="/currently-reading-books">View currently reading list</a>
+                <a class="btn btn-info" href="/read-books">Read books</a>
+                <a class="btn btn-info" href="/to-read-books">To-read list</a>
+                <a class="btn btn-info" href="/currently-reading-books">Currently reading list</a>
             </div>
         </div>
         <div class="row" th:if="${books.size() > 0}">

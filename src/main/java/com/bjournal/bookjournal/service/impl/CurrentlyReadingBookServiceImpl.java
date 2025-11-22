@@ -50,7 +50,8 @@ public class CurrentlyReadingBookServiceImpl implements CurrentlyReadingBookServ
     @Transactional
     @Override
     public void delete(String username, Long bookId) {
-        CurrentlyReadingBook currentlyReadingBook = this.currentlyReadingBookRepository.findByUserUsernameAndBookId(username, bookId).orElseThrow(()->new CurrentlyReadingBookNotFoundException());
+        CurrentlyReadingBook currentlyReadingBook = this.currentlyReadingBookRepository.findByUserUsernameAndBookId(username, bookId).orElse(null);
+        if (currentlyReadingBook == null) return;
         this.currentlyReadingBookRepository.delete(currentlyReadingBook);
     }
 

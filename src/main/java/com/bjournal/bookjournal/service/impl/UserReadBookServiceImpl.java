@@ -4,6 +4,7 @@ import com.bjournal.bookjournal.model.Book;
 import com.bjournal.bookjournal.model.User;
 import com.bjournal.bookjournal.model.UserReadBook;
 import com.bjournal.bookjournal.model.exceptions.BookNotFoundException;
+import com.bjournal.bookjournal.model.exceptions.UserReadBookAlreadyExistsException;
 import com.bjournal.bookjournal.model.exceptions.UserReadBookNotFoundException;
 import com.bjournal.bookjournal.repository.UserReadBookRepository;
 import com.bjournal.bookjournal.service.BookService;
@@ -35,8 +36,12 @@ public class UserReadBookServiceImpl implements UserReadBookService {
     }
 
     @Override
-    public Optional<UserReadBook> findByUsernameAndBookId(String username, Long bookId) {
-        return this.userReadBookRepository.findByUserUsernameAndBookId(username, bookId);
+    public Optional<UserReadBook> findLastByUserUsernameAndBookId(String username, Long bookId) {
+        List<UserReadBook> books = this.userReadBookRepository.findAllByUserUsernameAndBookId(username, bookId);
+        if (books.isEmpty()) {
+            return Optional.empty();
+        }
+        return Optional.of(books.get(books.size() - 1));
     }
 
     @Override
@@ -44,6 +49,7 @@ public class UserReadBookServiceImpl implements UserReadBookService {
         if (addedDate == null  || bookId == null) {
             throw new IllegalArgumentException("Invalid arguments");
         }
+
         User user = this.userService.findByUsername(username).orElseThrow(() -> new UsernameNotFoundException("User not found"));
         Book book = this.bookService.findById(bookId).orElseThrow(()->new BookNotFoundException(bookId));
         this.userReadBookRepository.save(new UserReadBook(addedDate, user, book));
@@ -51,9 +57,10 @@ public class UserReadBookServiceImpl implements UserReadBookService {
 
     @Override
     @Transactional
-    public void deleteByUsernameAndBookId(String username, Long bookId) {
-        UserReadBook userReadBook = findByUsernameAndBookId(username,bookId).orElseThrow(()->new UserReadBookNotFoundException(username,bookId));
-        this.userReadBookRepository.delete(userReadBook);
+    public void delete(String username, Long bookId) {
+        UserReadBook userReadBook = findLastByUserUsernameAndBookId(username,bookId).orElse(null);
+        if (userReadBook == null) return;
+        this.userReadBookRepository.deleteAllByUserUsernameAndBookId(username,bookId);
     }
 
     @Override
@@ -61,7 +68,7 @@ public class UserReadBookServiceImpl implements UserReadBookService {
         if (startedDate !=null && finishedDate!=null && startedDate.isAfter(finishedDate)) {
             throw new IllegalArgumentException("Started date cannot be after finished date");
         }
-        UserReadBook userReadBook = findByUsernameAndBookId(username, bookId).orElseThrow(()->new UserReadBookNotFoundException(username,bookId));
+        UserReadBook userReadBook = findLastByUserUsernameAndBookId(username, bookId).orElseThrow(()->new UserReadBookNotFoundException(username,bookId));
         userReadBook.setStartedDate(startedDate);
         userReadBook.setFinishedDate(finishedDate);
         this.userReadBookRepository.save(userReadBook);

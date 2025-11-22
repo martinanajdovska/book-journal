@@ -40,7 +40,7 @@ public class QuoteServiceImpl implements QuoteService {
 
         User user = this.userService.findByUsername(username).orElseThrow(()->new UsernameNotFoundException(username));
         Book book = this.bookService.findById(bookId).orElseThrow(()->new BookNotFoundException(bookId));
-        UserReadBook userReadBook = this.userReadBookService.findByUsernameAndBookId(username,bookId).orElseThrow(()-> new UserReadBookNotFoundException(username,bookId));
+        UserReadBook userReadBook = this.userReadBookService.findLastByUserUsernameAndBookId(username,bookId).orElseThrow(()-> new UserReadBookNotFoundException(username,bookId));
 
         this.quoteRepository.save(new Quote(book,user,String.format("\"%s\"", text)));
     }

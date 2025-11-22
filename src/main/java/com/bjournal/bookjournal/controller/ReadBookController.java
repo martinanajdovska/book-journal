@@ -50,6 +50,7 @@ public class ReadBookController {
             model.addAttribute("error", e.getMessage());
             return "error-page";
         }
+
         return "redirect:/books/details/" + id;
     }
 
@@ -77,7 +78,7 @@ public class ReadBookController {
     public String removeReadBook(@PathVariable Long id, Model model, @AuthenticationPrincipal UserDetails user) {
         String username = user.getUsername();
         try {
-            this.userReadBookService.deleteByUsernameAndBookId(username, id);
+            this.userReadBookService.delete(username, id);
         } catch (UserReadBookNotFoundException e) {
             model.addAttribute("error", e.getMessage());
             return "error-page";

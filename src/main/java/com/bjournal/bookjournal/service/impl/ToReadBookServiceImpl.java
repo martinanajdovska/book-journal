@@ -4,6 +4,7 @@ import com.bjournal.bookjournal.model.Book;
 import com.bjournal.bookjournal.model.ToReadBook;
 import com.bjournal.bookjournal.model.User;
 import com.bjournal.bookjournal.model.exceptions.BookNotFoundException;
+import com.bjournal.bookjournal.model.exceptions.ToReadBookAlreadyExistsException;
 import com.bjournal.bookjournal.model.exceptions.ToReadBookNotFoundException;
 import com.bjournal.bookjournal.repository.ToReadBookRepository;
 import com.bjournal.bookjournal.service.BookService;
@@ -36,6 +37,7 @@ public class ToReadBookServiceImpl implements ToReadBookService {
 
     @Override
     public void add(String username, Long bookId) {
+        if (this.toReadBookRepository.findByUserUsernameAndBookId(username, bookId).isPresent()) throw new ToReadBookAlreadyExistsException();
         User user = this.userService.findByUsername(username).orElseThrow(() -> new UsernameNotFoundException("Username not found"));
         Book book = this.bookService.findById(bookId).orElseThrow(()->new BookNotFoundException(bookId));
 
@@ -45,7 +47,8 @@ public class ToReadBookServiceImpl implements ToReadBookService {
     @Transactional
     @Override
     public void delete(String username, Long bookId) {
-        ToReadBook toReadBook = this.toReadBookRepository.findByUserUsernameAndBookId(username, bookId).orElseThrow(()->new ToReadBookNotFoundException());
+        ToReadBook toReadBook = this.toReadBookRepository.findByUserUsernameAndBookId(username, bookId).orElse(null);
+        if (toReadBook == null) return;
         this.toReadBookRepository.delete(toReadBook);
     }
 

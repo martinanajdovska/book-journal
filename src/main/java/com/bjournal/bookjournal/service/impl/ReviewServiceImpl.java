@@ -49,7 +49,7 @@ public class ReviewServiceImpl implements ReviewService {
         User user = this.userService.findByUsername(username).orElseThrow(()-> new UsernameNotFoundException(username));
         Book book = this.bookService.findById(bookId).orElseThrow(()-> new BookNotFoundException(bookId));
         // if user hasn't read this book then they can't add a review
-        UserReadBook userReadBook = this.userReadBookService.findByUsernameAndBookId(username,bookId).orElseThrow(()-> new UserReadBookNotFoundException(username,bookId));
+        UserReadBook userReadBook = this.userReadBookService.findLastByUserUsernameAndBookId(username,bookId).orElseThrow(()-> new UserReadBookNotFoundException(username,bookId));
 
         Review review = new Review(text, book, user, rating);
         reviewRepository.save(review);

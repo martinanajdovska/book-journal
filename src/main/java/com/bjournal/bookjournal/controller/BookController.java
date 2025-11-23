@@ -163,6 +163,8 @@ public class BookController {
         model.addAttribute("ratings", List.of(1,1.5,2,2.5,3,3.5,4,4.5,5));
         model.addAttribute("averageRating", reviewService.averageRatingByBookId(id));
         model.addAttribute("quotes", quoteService.findAllByUsernameAndBookId(username, id));
+        model.addAttribute("hasError", false);
+
         return "/book/book-details";
     }
 
@@ -199,6 +201,8 @@ public class BookController {
         model.addAttribute("quotes", quoteService.findAllByUsernameAndBookId(username, id));
         model.addAttribute("averageRating", reviewService.averageRatingByBookId(id));
         model.addAttribute("reviews", reviewService.findAllByBookId(id));
+        model.addAttribute("hasError", false);
+
         return "/book/book-details";
     }
 }

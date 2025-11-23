@@ -8,6 +8,9 @@
 </head>
 <body>
 <div class="container">
+    <div class="col-12 justify-content-center my-5 alert alert-danger" role="alert" th:if="${hasError}">
+        <p th:text="${error}"></p>
+    </div>
     <div class="row">
         <a type="button" style="width: 150px;" class="btn btn-primary mt-5" href="/">Back</a>
     </div>
@@ -74,9 +77,11 @@
                 </div>
                 <input type="submit" class="btn btn-primary" value="Submit review">
             </form>
-            <form method="post" th:action="'/quotes/add/'+${book.getId()}" class="col-6">
+            <form method="post" th:action="'/quotes/add/'+${book.getId()}" class="col-6" enctype="multipart/form-data">
                 <label for="quote">Add quote:</label>
                 <textarea class="form-control" name="quote" id="quote" rows="3" placeholder="Enter quote"></textarea>
+                <label class="mt-2" for="file">Or add image of text to be scanned.</label>
+                <input type="file" name="file" accept="image/*" id="file">
                 <input type="submit" class="btn btn-primary mt-3" value="Submit quote">
             </form>
         </div>
@@ -85,7 +90,12 @@
     <div class="row mb-5">
         <th:block th:if="${quotes.size() > 0}">
             <div th:each="quote : ${quotes}" class="col-3 border p-2 m-1">
-                <p th:text="${quote.getText()}"></p>
+                <blockquote th:text="${quote.getText()}"></blockquote>
+                <p>
+                    <a class="btn btn-sm btn-danger" th:href="@{'/quotes/remove/{id}?redirect=/books/details/{bookId}'
+                        (id=${quote.getId()}, bookId=${book.getId()})}">Delete</a>
+                    <a class="btn btn-sm btn-info" th:href="@{'/quotes/edit/{id}' (id=${quote.getId()})}">Edit</a>
+                </p>
             </div>
         </th:block>
     </div>

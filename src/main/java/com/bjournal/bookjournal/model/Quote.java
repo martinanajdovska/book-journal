@@ -11,6 +11,7 @@ public class Quote {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private long id;
+    @Lob
     private String text;
 
     @ManyToOne(fetch = FetchType.LAZY)

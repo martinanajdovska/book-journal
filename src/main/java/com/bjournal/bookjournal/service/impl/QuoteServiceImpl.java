@@ -28,6 +28,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 
@@ -50,6 +51,12 @@ public class QuoteServiceImpl implements QuoteService {
         if (username == null || bookId == null || (text.isEmpty() && file.isEmpty())){
             throw new IllegalArgumentException("Invalid arguments");
         }
+        User user = this.userService.findByUsername(username).orElseThrow(()->new UsernameNotFoundException(username));
+        Book book = this.bookService.findById(bookId).orElseThrow(()->new BookNotFoundException(bookId));
+        UserReadBook userReadBook = this.userReadBookService.findLastByUserUsernameAndBookId(username,bookId).orElseThrow(()-> new UserReadBookNotFoundException(username,bookId));
+
+        StringBuilder stringBuilder = new StringBuilder();
+        stringBuilder.append("\"");
 
         if(text.isEmpty()){
             Tesseract tesseract = new Tesseract();
@@ -63,14 +70,17 @@ public class QuoteServiceImpl implements QuoteService {
             fos.write(file.getBytes());
             fos.close();
             text = tesseract.doOCR(tmp);
+            text = text.trim();
+
+            // fix the new lines that ocr adds from the pages
+            List<String> words = Arrays.asList(text.split("\n"));
+            words.forEach(word -> {stringBuilder.append(word).append(" ");});
+
             tmp.delete();
         }
 
-        User user = this.userService.findByUsername(username).orElseThrow(()->new UsernameNotFoundException(username));
-        Book book = this.bookService.findById(bookId).orElseThrow(()->new BookNotFoundException(bookId));
-        UserReadBook userReadBook = this.userReadBookService.findLastByUserUsernameAndBookId(username,bookId).orElseThrow(()-> new UserReadBookNotFoundException(username,bookId));
-
-        this.quoteRepository.save(new Quote(book,user,String.format("\"%s\"", text)));
+        stringBuilder.append("\"");
+        this.quoteRepository.save(new Quote(book,user,stringBuilder.toString()));
     }
 
     @Override
@@ -83,14 +93,14 @@ public class QuoteServiceImpl implements QuoteService {
     }
 
     @Override
-    public Optional<Quote> update(Long id, String text) {
+    public Quote update(Long id, String text) {
         if (id == null || text == null || text.isBlank()) {
             throw new IllegalArgumentException("Invalid arguments");
         }
         Quote quote = this.quoteRepository.findById(id).orElseThrow(()->new QuoteNotFoundException(id));
         quote.setText(text);
         this.quoteRepository.save(quote);
-        return Optional.of(quote);
+        return quote;
     }
 
     @Transactional

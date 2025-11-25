@@ -1,5 +1,6 @@
 package com.bjournal.bookjournal.controller;
 
+import com.bjournal.bookjournal.model.Book;
 import com.bjournal.bookjournal.model.Quote;
 import com.bjournal.bookjournal.model.exceptions.BookNotFoundException;
 import com.bjournal.bookjournal.model.exceptions.QuoteNotFoundException;
@@ -68,11 +69,20 @@ public class QuoteController {
             return "error-page";
         }
         model.addAttribute("quote", quote.get());
+        model.addAttribute("bookId", quote.get().getBook().getId());
         return "/quote/edit-form";
     }
-//        TODO update quote and redirect to book details
-//    @PostMapping("/edit/{id}")
-//    public String editQuote(@PathVariable Long id, Model model){
-//
-//    }
+    @PostMapping("/edit/{id}")
+    public String editQuote(@PathVariable Long id, @RequestParam(required = true) String text, Model model){
+        Quote quote;
+        try {
+            quote = quoteService.update(id, text);
+        } catch (QuoteNotFoundException e) {
+            model.addAttribute("error", e.getMessage());
+            return "error-page";
+        }
+        Book book = quote.getBook();
+        model.addAttribute("book", book);
+        return "redirect:/books/details/"+book.getId();
+    }
 }

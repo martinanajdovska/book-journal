@@ -89,9 +89,9 @@
     <h3 class="mt-5">My saved quotes:</h3>
     <div class="row mb-5">
         <th:block th:if="${quotes.size() > 0}">
-            <div th:each="quote : ${quotes}" class="col-3 border p-2 m-1">
-                <blockquote th:text="${quote.getText()}"></blockquote>
-                <p>
+            <div th:each="quote : ${quotes}" class="col-12 border p-4 m-1">
+                <p style="white-space: pre-wrap; overflow-wrap: break-word" th:text="${quote.getText()}"></p>
+                <p class="m-0 pl-3">
                     <a class="btn btn-sm btn-danger" th:href="@{'/quotes/remove/{id}?redirect=/books/details/{bookId}'
                         (id=${quote.getId()}, bookId=${book.getId()})}">Delete</a>
                     <a class="btn btn-sm btn-info" th:href="@{'/quotes/edit/{id}' (id=${quote.getId()})}">Edit</a>

@@ -13,6 +13,7 @@
             <textarea class="form-control" id="text" name="text" rows="5" th:text="${quote.getText()}" required></textarea>
         </div>
         <button type="submit" class="btn btn-primary">Submit</button>
+        <a type="button" class="btn btn-primary" th:href="'/books/details/'+${bookId}">Back</a>
     </form>
 </div>
 </body>

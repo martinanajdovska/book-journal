@@ -24,9 +24,9 @@
         </div>
     </div>
     <div class="row" th:if="${readBooks.size() > 0}">
-        <div th:each="readBook : ${readBooks}" class="card col-3 m-3" style="width: 68rem; max-height: 26rem;">
+        <div th:each="readBook : ${readBooks}" class="card col-4 m-2 pt-3" style="max-width: 16rem; max-height: 30rem;">
             <a th:href="@{'/books/details/{id}' (id=${readBook.getBook().getId()})}">
-                <img class="card-img-top py-2" style="width: 16rem; max-height: 15rem;"
+                <img class="card-img-top" style="width: 14rem; max-height: 25rem;"
                      th:src="@{'/uploads/'+${readBook.getBook().getFile()}}" alt="Card image cap">
             </a>
             <div class="card-body">

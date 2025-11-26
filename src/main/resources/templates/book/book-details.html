@@ -8,15 +8,17 @@
 </head>
 <body>
 <div class="container">
-    <div class="col-12 justify-content-center my-5 alert alert-danger" role="alert" th:if="${hasError}">
-        <p th:text="${error}"></p>
+    <div class="row" th:if="${hasError}">
+        <div class="col-12 justify-content-center my-5 alert alert-danger" role="alert">
+            <p th:text="${error}"></p>
+        </div>
     </div>
     <div class="row">
         <a type="button" style="width: 150px;" class="btn btn-primary mt-5" href="/">Back</a>
     </div>
-    <div class="row my-5 border p-4">
-        <div class="col-6">
-            <img style="max-height: 20rem;" th:src="@{'/uploads/'+${book.getFile()}}" alt="Image for book">
+    <div class="row my-5 border p-4 align-items-center">
+        <div class="col-6 d-flex justify-content-center">
+            <img style="max-width: 30rem; max-height: 25rem;" th:src="@{'/uploads/'+${book.getFile()}}" alt="Image for book">
         </div>
         <div class="col-6">
             <h3 th:text="${book.getTitle()}"></h3>
@@ -29,11 +31,12 @@
                     <option selected>Select</option>
                     <option th:selected="${toReadBook}" th:value="toRead">To-read</option>
                     <option th:selected="${userReadBook != null && !toReadBook}" th:value="hasRead">Read</option>
-                    <option th:selected="${isCurrentlyReadingBook}"  th:value="isCurrentlyReading">Currently reading</option>
+                    <option th:selected="${isCurrentlyReadingBook}" th:value="isCurrentlyReading">Currently reading
+                    </option>
                     <option th:value="remove">Remove book</option>
                 </select>
             </form>
-<!--            TODO: make form for inputting starting date and reading progress when isCurrentlyReading-->
+            <!--            TODO: make form for inputting starting date and reading progress when isCurrentlyReading-->
             <th:block th:if="${userReadBook != null}">
                 <form method="post" th:action="'/read-books/add/'+${book.getId()}">
                     <div class="form-group">
@@ -64,34 +67,48 @@
     </div>
     <th:block th:if="${userReadBook != null}">
         <div class="row border p-3">
-            <form method="post" th:action="'/reviews/add/'+${book.getId()}" class="col-6">
-                <label for="review">Add review:</label>
-                <textarea class="form-control" name="review" id="review" rows="3" placeholder="Enter review"></textarea>
-                <div class="form-group mt-2" style="width: 80px;">
-                    <label for="rating">Rating:</label>
-                    <select name="rating" class="form-control" id="rating">
-                        <option value="" selected></option>
-                        <option th:each="ratingOpt : ${ratings}"
-                                th:value="${ratingOpt}" th:text="${ratingOpt}"></option>
-                    </select>
+            <form method="post" th:action="'/reviews/add/'+${book.getId()}" class="col-6 pr-4">
+                <div class="row">
+                    <label for="review">Review:</label>
+                    <textarea class="form-control" name="review" id="review" rows="3" placeholder="Add review"></textarea>
                 </div>
-                <input type="submit" class="btn btn-primary" value="Submit review">
+                <div class="row align-items-center">
+                    <div class="form-group mt-2 col-6 pl-0" style="width: 80px;">
+                        <label for="rating">Rating:</label>
+                        <select name="rating" class="form-control" id="rating" style="width: 70px;">
+                            <option value="" selected></option>
+                            <option th:each="ratingOpt : ${ratings}"
+                                    th:value="${ratingOpt}" th:text="${ratingOpt}"></option>
+                        </select>
+                    </div>
+                    <div class="col-6">
+                        <input type="submit" class="btn btn-primary" value="Submit review">
+                    </div>
+                </div>
             </form>
-            <form method="post" th:action="'/quotes/add/'+${book.getId()}" class="col-6" enctype="multipart/form-data">
-                <label for="quote">Add quote:</label>
-                <textarea class="form-control" name="quote" id="quote" rows="3" placeholder="Enter quote"></textarea>
-                <label class="mt-2" for="file">Or add image of text to be scanned.</label>
-                <input type="file" name="file" accept="image/*" id="file">
-                <input type="submit" class="btn btn-primary mt-3" value="Submit quote">
+            <form method="post" th:action="'/quotes/add/'+${book.getId()}" class="col-6 pl-3" enctype="multipart/form-data">
+                <div class="row">
+                    <label for="quote">Quote:</label>
+                    <textarea class="form-control" name="quote" id="quote" rows="3" placeholder="Add quote"></textarea>
+                </div>
+                <div class="row align-items-center">
+                    <div class="form-group mt-2 col-6 pl-0">
+                        <label for="file">Or add image of text to be scanned.</label>
+                        <input type="file" name="file" accept="image/*" id="file">
+                    </div>
+                    <div class="col-6">
+                        <input type="submit" class="btn btn-primary" value="Submit quote">
+                    </div>
+                </div>
             </form>
         </div>
     </th:block>
-    <h3 class="mt-5">My saved quotes:</h3>
-    <div class="row mb-5">
+    <div class="row mt-5">
+        <h3 class="col-12 mb-3">My saved quotes:</h3>
         <th:block th:if="${quotes.size() > 0}">
             <div th:each="quote : ${quotes}" class="col-12 border p-4 m-1">
                 <p style="white-space: pre-wrap; overflow-wrap: break-word" th:text="${quote.getText()}"></p>
-                <p class="m-0 pl-3">
+                <p class="m-0">
                     <a class="btn btn-sm btn-danger" th:href="@{'/quotes/remove/{id}?redirect=/books/details/{bookId}'
                         (id=${quote.getId()}, bookId=${book.getId()})}">Delete</a>
                     <a class="btn btn-sm btn-info" th:href="@{'/quotes/edit/{id}' (id=${quote.getId()})}">Edit</a>
@@ -99,15 +116,21 @@
             </div>
         </th:block>
     </div>
-    <h3 class="mt-5">Book reviews:</h3>
-    <div class="row mb-5">
+    <div class="row mt-5">
+        <h3 class="col-12 mb-3">Book reviews:</h3>
         <th:block th:if="${reviews.size() > 0}">
-            <div th:each="review : ${reviews}" class="col-3 border p-2 m-1">
-                <p class="mb-0" th:text="'User: ' + ${review.getUser().getUsername()}"></p>
-                <hr>
-                <p th:text="${review.getReview()}"></p>
-                <hr>
-                <p th:if="${review.getRating()!=null}" th:text="${review.getRating()}"></p>
+            <div th:each="review : ${reviews}" class="col-3 border p-2 m-1 mb-3">
+                <div class="d-flex justify-content-between align-items-center">
+                    <b class="mb-0" th:text="${review.getUser().getUsername()}"></b>
+                    <div th:if="${review.getRating()!=null}" class="d-flex justify-content-end align-items-center">
+                        <img src="/images/star.png" alt="Star img" width="30px;" height="30px;">
+                        <p th:text="${review.getRating()}" class="m-0 mx-1"></p>
+                    </div>
+                </div>
+                <div th:if="${!review.getReview().isBlank()}">
+                    <hr>
+                    <p th:text="${review.getReview()}"></p>
+                </div>
             </div>
         </th:block>
     </div>

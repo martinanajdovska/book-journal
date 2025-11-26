@@ -15,29 +15,31 @@
                 <button type="submit" class="btn btn-info">Search</button>
             </form>
         </div>
-        <div class="row">
-            <div class="col-12 justify-content-center mb-3">
-                <a class="btn btn-info" href="/read-books">Read books</a>
-                <a class="btn btn-info" href="/currently-reading-books">Currently reading list</a>
-                <a class="btn btn-primary" href="/">Back</a>
-            </div>
+    </div>
+    <div class="row">
+        <div class="col-12 justify-content-center mb-3">
+            <a class="btn btn-info" href="/read-books">Read books</a>
+            <a class="btn btn-info" href="/currently-reading-books">Currently reading list</a>
+            <a class="btn btn-primary" href="/">Back</a>
         </div>
-        <div class="row" th:if="${toReadBooks.size() > 0}">
-            <div th:each="toReadBook : ${toReadBooks}" class="card col-3 m-3" style="width: 68rem; max-height: 26rem;">
-                <a th:href="@{'/books/details/{id}' (id=${toReadBook.getBook().getId()})}">
-                    <img class="card-img-top py-2" style="width: 16rem; max-height: 15rem;"
-                         th:src="@{'/uploads/'+${toReadBook.getBook().getFile()}}" alt="Card image cap">
+    </div>
+    <div class="row" th:if="${toReadBooks.size() > 0}">
+        <div th:each="toReadBook : ${toReadBooks}" class="card col-4 m-2 pt-3"
+             style="max-width: 16rem; max-height: 30rem;">
+            <a th:href="@{'/books/details/{id}' (id=${toReadBook.getBook().getId()})}">
+                <img class="card-img-top" style="width: 14rem; max-height: 25rem;"
+                     th:src="@{'/uploads/'+${toReadBook.getBook().getFile()}}" alt="Card image cap">
+            </a>
+            <div class="card-body">
+                <a th:href="@{'/books/details/{id}' (id=${toReadBook.getBook().getId()})}"
+                   class="text-reset text-decoration-none">
+                    <h5 class="card-title"
+                        th:text="${toReadBook.getBook().getTitle()}+' - '+${toReadBook.getBook().getAuthor()}"></h5>
                 </a>
-                <div class="card-body">
-                    <a th:href="@{'/books/details/{id}' (id=${toReadBook.getBook().getId()})}"
-                       class="text-reset text-decoration-none">
-                        <h5 class="card-title"
-                            th:text="${toReadBook.getBook().getTitle()}+' - '+${toReadBook.getBook().getAuthor()}"></h5>
-                    </a>
-                    <a th:href="@{'/to-read-books/remove/{id}?redirect=/to-read-books' (id=${toReadBook.getBook().getId()})}" class="btn btn-sm btn-danger">
-                        <i class="fa fa-trash">Remove</i>
-                    </a>
-                </div>
+                <a th:href="@{'/to-read-books/remove/{id}?redirect=/to-read-books' (id=${toReadBook.getBook().getId()})}"
+                   class="btn btn-sm btn-danger">
+                    <i class="fa fa-trash">Remove</i>
+                </a>
             </div>
         </div>
     </div>

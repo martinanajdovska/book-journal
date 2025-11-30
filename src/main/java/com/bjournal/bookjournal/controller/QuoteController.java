@@ -16,6 +16,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
+import java.util.List;
 import java.util.Optional;
 
 @Controller
@@ -25,6 +26,26 @@ public class QuoteController {
 
     public QuoteController(QuoteService quoteService) {
         this.quoteService = quoteService;
+    }
+
+    @GetMapping
+    public String getQuotes(Model model, @AuthenticationPrincipal UserDetails user,
+                            @RequestParam(required = false) String search, @RequestParam(required = false) String error){
+        if (error != null && !error.isEmpty()) {
+            model.addAttribute("hasError", true);
+            model.addAttribute("error", error);
+        }
+        String username = user.getUsername();
+
+        List<Quote> quotes;
+        if (search != null && !search.isBlank()) {
+            quotes = quoteService.findAllByUsernameAndTextContaining(username, search);
+        } else {
+            quotes = quoteService.findAllByUsername(username);
+        }
+        model.addAttribute("quotes", quotes);
+        model.addAttribute("search", search);
+        return "/quote/index";
     }
 
     @PostMapping("/add/{id}")

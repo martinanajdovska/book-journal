@@ -14,4 +14,6 @@ public interface QuoteService {
     Quote update(Long id, String text);
     List<Quote> findAllByUsernameAndBookId(String username, Long bookId);
     Optional<Quote> findById(Long id);
+    List<Quote> findAllByUsername(String username);
+    List<Quote> findAllByUsernameAndTextContaining(String username, String text);
 }

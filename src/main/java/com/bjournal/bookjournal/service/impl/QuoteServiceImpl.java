@@ -1,17 +1,12 @@
 package com.bjournal.bookjournal.service.impl;
 
-import com.bjournal.bookjournal.model.Book;
-import com.bjournal.bookjournal.model.Quote;
-import com.bjournal.bookjournal.model.User;
-import com.bjournal.bookjournal.model.UserReadBook;
+import com.bjournal.bookjournal.model.*;
 import com.bjournal.bookjournal.model.exceptions.BookNotFoundException;
+import com.bjournal.bookjournal.model.exceptions.CurrentlyReadingBookNotFoundException;
 import com.bjournal.bookjournal.model.exceptions.QuoteNotFoundException;
 import com.bjournal.bookjournal.model.exceptions.UserReadBookNotFoundException;
 import com.bjournal.bookjournal.repository.QuoteRepository;
-import com.bjournal.bookjournal.service.BookService;
-import com.bjournal.bookjournal.service.QuoteService;
-import com.bjournal.bookjournal.service.UserReadBookService;
-import com.bjournal.bookjournal.service.UserService;
+import com.bjournal.bookjournal.service.*;
 import jakarta.transaction.Transactional;
 import net.sourceforge.tess4j.Tesseract;
 import net.sourceforge.tess4j.TesseractException;
@@ -37,13 +32,13 @@ public class QuoteServiceImpl implements QuoteService {
     private final QuoteRepository quoteRepository;
     private final UserService userService;
     private final BookService bookService;
-    private final UserReadBookService userReadBookService;
+    private final CurrentlyReadingBookService currentlyReadingBookService;
 
-    public QuoteServiceImpl(QuoteRepository quoteRepository, UserService userService, BookService bookService, UserReadBookService userReadBookService) {
+    public QuoteServiceImpl(QuoteRepository quoteRepository, UserService userService, BookService bookService, CurrentlyReadingBookService currentlyReadingBookService) {
         this.quoteRepository = quoteRepository;
         this.userService = userService;
         this.bookService = bookService;
-        this.userReadBookService = userReadBookService;
+        this.currentlyReadingBookService = currentlyReadingBookService;
     }
 
     @Override
@@ -53,7 +48,7 @@ public class QuoteServiceImpl implements QuoteService {
         }
         User user = this.userService.findByUsername(username).orElseThrow(()->new UsernameNotFoundException(username));
         Book book = this.bookService.findById(bookId).orElseThrow(()->new BookNotFoundException(bookId));
-        UserReadBook userReadBook = this.userReadBookService.findLastByUserUsernameAndBookId(username,bookId).orElseThrow(()-> new UserReadBookNotFoundException(username,bookId));
+        CurrentlyReadingBook currentlyReadingBook = this.currentlyReadingBookService.findByUsernameAndBookId(username, bookId).orElseThrow(()->new CurrentlyReadingBookNotFoundException());
 
         StringBuilder stringBuilder = new StringBuilder();
         stringBuilder.append("\"");
@@ -77,6 +72,8 @@ public class QuoteServiceImpl implements QuoteService {
             words.forEach(word -> {stringBuilder.append(word).append(" ");});
 
             tmp.delete();
+        } else {
+            stringBuilder.append(text);
         }
 
         stringBuilder.append("\"");
@@ -112,5 +109,20 @@ public class QuoteServiceImpl implements QuoteService {
     @Override
     public Optional<Quote> findById(Long id) {
         return this.quoteRepository.findById(id);
+    }
+
+    @Override
+    public List<Quote> findAllByUsername(String username) {
+        return this.quoteRepository.findAllByUserUsername(username);
+    }
+
+
+    @Override
+    @Transactional
+    public List<Quote> findAllByUsernameAndTextContaining(String username, String text) {
+        if (text == null || text.isBlank()) {
+            throw new IllegalArgumentException("Invalid arguments");
+        }
+        return this.quoteRepository.findAllByUserUsernameAndTextContainingIgnoreCase(username,text);
     }
 }

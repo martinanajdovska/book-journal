@@ -65,8 +65,8 @@
             <p th:text="${book.getDescription()}"></p>
         </div>
     </div>
-    <th:block th:if="${userReadBook != null}">
         <div class="row border p-3">
+            <th:block th:if="${userReadBook != null}">
             <form method="post" th:action="'/reviews/add/'+${book.getId()}" class="col-6 pr-4">
                 <div class="row">
                     <label for="review">Review:</label>
@@ -86,6 +86,8 @@
                     </div>
                 </div>
             </form>
+            </th:block>
+            <th:block th:if="${isCurrentlyReadingBook}">
             <form method="post" th:action="'/quotes/add/'+${book.getId()}" class="col-6 pl-3" enctype="multipart/form-data">
                 <div class="row">
                     <label for="quote">Quote:</label>
@@ -101,8 +103,8 @@
                     </div>
                 </div>
             </form>
+            </th:block>
         </div>
-    </th:block>
     <div class="row mt-5">
         <h3 class="col-12 mb-3">My saved quotes:</h3>
         <th:block th:if="${quotes.size() > 0}">

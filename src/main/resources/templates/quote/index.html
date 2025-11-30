@@ -9,8 +9,13 @@
 <body>
 <div class="container mb-4">
     <div class="row">
-        <div class="col-12 justify-content-center my-5">
-            <form action="/read-books" method="get">
+        <div class="col-12 justify-content-center my-5 alert alert-danger" role="alert" th:if="${hasError}">
+            <p th:text="${error}"></p>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-10 justify-content-center my-5">
+            <form action="/quotes" method="get">
                 <input type="text" name="search" th:value="${search}" placeholder="Search" size="50">
                 <button type="submit" class="btn btn-info">Search</button>
             </form>
@@ -18,25 +23,23 @@
     </div>
     <div class="row">
         <div class="col-12 justify-content-center mb-3">
+            <a class="btn btn-info" href="/read-books">Read books</a>
             <a class="btn btn-info" href="/to-read-books">To-read</a>
             <a class="btn btn-info" href="/currently-reading-books">Currently reading</a>
             <a class="btn btn-primary" href="/">Back</a>
         </div>
     </div>
-    <div class="row" th:if="${readBooks.size() > 0}">
-        <div th:each="readBook : ${readBooks}" class="card col-4 m-2 pt-3" style="max-width: 16rem; max-height: 30rem;">
-            <a th:href="@{'/books/details/{id}' (id=${readBook.getBook().getId()})}">
-                <img class="card-img-top" style="width: 14rem; max-height: 25rem;"
-                     th:src="@{'/uploads/'+${readBook.getBook().getFile()}}" alt="Card image cap">
-            </a>
-            <div class="card-body">
-                <a th:href="@{'/books/details/{id}' (id=${readBook.getBook().getId()})}"
-                   class="text-reset text-decoration-none">
-                    <h5 class="card-title"
-                        th:text="${readBook.getBook().getTitle()}+' - '+${readBook.getBook().getAuthor()}"></h5>
-                </a>
+    <div class="row">
+        <th:block th:if="${quotes.size() > 0}">
+            <div th:each="quote : ${quotes}" class="col-12 border p-4 m-1">
+                <p style="white-space: pre-wrap; overflow-wrap: break-word" th:text="${quote.getText()} + ' - ' + ${quote.getBook().getTitle()}"></p>
+                <p class="m-0">
+                    <a class="btn btn-sm btn-danger" th:href="@{'/quotes/remove/{id}?redirect=/quotes'
+                        (id=${quote.getId()})}">Delete</a>
+                    <a class="btn btn-sm btn-info" th:href="@{'/quotes/edit/{id}' (id=${quote.getId()})}">Edit</a>
+                </p>
             </div>
-        </div>
+        </th:block>
     </div>
 </div>
 </body>

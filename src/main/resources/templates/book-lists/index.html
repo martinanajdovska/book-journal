@@ -7,7 +7,7 @@
           integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
 </head>
 <body>
-<div class="container mb-4">
+<div class="container">
     <div class="row">
         <div class="col-12 justify-content-center my-5 alert alert-danger" role="alert" th:if="${hasError}">
             <p th:text="${error}"></p>
@@ -33,6 +33,16 @@
             <a class="btn btn-info" href="/to-read-books">To-read</a>
             <a class="btn btn-info" href="/currently-reading-books">Currently reading</a>
             <a class="btn btn-info" href="/quotes">Quotes</a>
+            <a class="btn btn-info" href="/borrowed-books">Borrowed books</a>
+        </div>
+    </div>
+    <div class="mb-3" sec:authorize="hasRole('ROLE_ADMIN')">
+        <div class="row">
+            <div class="col-sm-12 col-md-12">
+                <a href="/books/add" class="btn btn-block btn-dark">
+                    Add new book
+                </a>
+            </div>
         </div>
     </div>
     <div class="row" th:if="${books.size() > 0}">
@@ -60,15 +70,6 @@
     </div>
 </div>
 <div class="row">
-<div class="col mb-3" sec:authorize="hasRole('ROLE_ADMIN')">
-    <div class="row">
-        <div class="col-sm-12 col-md-12">
-            <a href="/books/add" class="btn btn-block btn-dark">
-                Add new book
-            </a>
-        </div>
-    </div>
-</div>
 </div>
 </body>
 </html>

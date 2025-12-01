@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.w3.org/1999/xhtml">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.3.1/dist/css/bootstrap.min.css"
+          integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+</head>
+<body>
+<div class="container">
+    <div class="row mt-5">
+        <div class="col-12 justify-content-center mb-3">
+            <a class="btn btn-info" href="/read-books">Read books</a>
+            <a class="btn btn-info" href="/to-read-books">To-read</a>
+            <a class="btn btn-info" href="/currently-reading-books">Currently reading</a>
+            <a class="btn btn-info" href="/quotes">Quotes</a>
+            <a class="btn btn-primary" href="/">Back</a>
+        </div>
+    </div>
+    <div class="mb-3">
+        <div class="row">
+            <div class="col-sm-12 col-md-12">
+                <form method="post" action="/borrowed-books/add">
+                    <div class="form-group">
+                        <label for="text">Add new</label>
+                        <textarea class="form-control" id="text" name="text" rows="3"></textarea>
+                        <button id="submit" type="submit" class="btn btn-primary mt-2">Submit</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    <div class="row">
+        <th:block th:if="${borrowedBooks.size() > 0}">
+            <div th:each="book : ${borrowedBooks}" class="col-12 border p-4 m-1">
+                <th:block th:if="${id != null && id == book.getId()}">
+                    <form method="post" th:action="@{'/borrowed-books/edit'}">
+                        <input type="hidden" name="id" th:value="${id}">
+                        <textarea class="form-control" id="updated" name="updated" rows="3" th:text="${book.getText()}"></textarea>
+                        <button id="submit-edit" type="submit" class="btn btn-primary">Submit</button>
+                    </form>
+                </th:block>
+                <th:block th:if="${id == null || id!=book.getId()}">
+                <p style="white-space: pre-wrap; overflow-wrap: break-word" th:text="${book.getText()}"></p>
+                <p class="m-0">
+                    <a class="btn btn-sm btn-danger" th:href="@{'/borrowed-books/remove/{id}'
+                        (id=${book.getId()})}">Delete</a>
+                    <a class="btn btn-sm btn-info" th:href="@{'/borrowed-books/edit/{id}' (id=${book.getId()})}">Edit</a>
+                </p>
+                </th:block>
+            </div>
+        </th:block>
+    </div>
+</div>
+</body>
+</html>
